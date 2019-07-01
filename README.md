@@ -2,6 +2,8 @@
 
 This vs-code extension allows you to work with your gardener projects, shoots, plants and seeds.
 
+<img src="https://user-images.githubusercontent.com/5526658/60441576-8f11cc80-9c17-11e9-9210-ab392d57c63e.png" alt="VScode Gardener Tools Screenshot" width="600"/>
+
 ## Features
 
 - List gardener projects
