@@ -7,3 +7,6 @@
 # Ignore all tempfiles.
 /tmp
 npm-debug.log
+
+.vscode-test/
+*.vsix

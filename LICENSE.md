@@ -211,3 +211,19 @@ This project may include APIs to SAP or third party products or services. The us
 This project includes the following subcomponents that are subject to separate license terms.
 Your use of these subcomponents is subject to the separate license terms applicable to
 each subcomponent.
+
+- [lodash](https://github.com/lodash/lodash)\
+Copyright JS Foundation and other contributors <https://js.foundation/>\
+[MIT License](https://github.com/lodash/lodash/blob/master/LICENSE)
+
+- [url-join](https://github.com/jfromaniello/url-join)\
+Copyright (c) 2015 José F. Romaniello
+[MIT License](https://github.com/jfromaniello/url-join/blob/master/LICENSE)
+
+- [vscode-kubernetes-tools](https://github.com/Azure/vscode-kubernetes-tools)\
+Copyright (c) Microsoft Corporation. All rights reserved.
+[MIT License](https://github.com/Azure/vscode-kubernetes-tools/blob/master/LICENSE)
+
+- [vscode-kubernetes-tools-api](https://github.com/Azure/vscode-kubernetes-tools-api)\
+Copyright (c) Microsoft Corporation. All rights reserved.
+[MIT License](https://github.com/Azure/vscode-kubernetes-tools-api/blob/master/LICENSE)
