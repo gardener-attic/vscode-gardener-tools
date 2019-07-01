@@ -367,6 +367,9 @@ function infraIcon (cloudType) {
     case 'gce':
         logo = `gce-${color}.svg`
         break
+    case 'gke':
+      logo = `gke-${color}.svg`
+      break
     default:
       return undefined
   }
