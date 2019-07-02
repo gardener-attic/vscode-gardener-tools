@@ -79,7 +79,7 @@
       },
       {
         "command": "vs-gardener.createShoot",
-        "title": "Create Cluster",
+        "title": "Create Shoot Cluster",
         "category": "Gardener"
       },
       {
@@ -96,6 +96,10 @@
         },
         {
           "command": "vs-gardener.showInDashboard",
+          "when": "viewItem =~ /gardener\\.folder\\.shoot/i"
+        },
+        {
+          "command": "vs-gardener.showInDashboard",
           "when": "viewItem =~ /gardener\\.project/i"
         },
         {
@@ -104,7 +108,7 @@
         },
         {
           "command": "vs-gardener.createShoot",
-          "when": "viewItem =~ /gardener\\.project/i"
+          "when": "viewItem =~ /gardener\\.folder\\.shoot/i"
         },
         {
           "command": "vs-gardener.createProject",

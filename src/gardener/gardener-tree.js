@@ -77,7 +77,7 @@ class GardenerTreeProvider {
       if (folderIcon) {
         treeItem.iconPath = vscode.Uri.file(path.join(__dirname, '../assets/', folderIcon))
       }
-      treeItem.contextValue = 'gardener.folder'
+      treeItem.contextValue = `gardener.folder.${element.childType}`
       return treeItem
     } else if (element.nodeType === nodeType.NODE_TYPE_SHOOT) {
       let label = element.name

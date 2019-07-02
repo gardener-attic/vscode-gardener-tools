@@ -113,10 +113,16 @@ function getNamespaceFromTarget(target) {
 function showInDashboard(commandTarget) {
   const node = getNode(commandTarget)
   const targetNodeType = _.get(node, 'cloudResource.nodeType')
+  const targetChildType = _.get(node, 'cloudResource.childType')
 
   switch (targetNodeType) {
     case nodeType.NODE_TYPE_SHOOT:
       showShootInDashboard(node)
+      break
+    case nodeType.NODE_TYPE_FOLDER:
+      if (targetChildType === nodeType.NODE_TYPE_SHOOT) {
+        showShootsInDashboard(node)
+      }
       break
     case nodeType.NODE_TYPE_PROJECT:
       showProjectInDashboard(node)
@@ -141,6 +147,19 @@ function showShootInDashboard(shootNode) {
   vscode.env.openExternal(vscode.Uri.parse(uri, true))
 }
 
+function showShootsInDashboard(projectNode) {
+  const landscapeName = _.get(projectNode, 'cloudResource.parent.landscape.name')
+  const dashboardUrl = getDashboardUrl(landscapeName)
+  if (!dashboardUrl) {
+    return
+  }
+
+  const namespace = _.get(projectNode, 'cloudResource.parent.namespace')
+
+  const uri = urljoin(dashboardUrl, '/namespace/', namespace, '/shoots')
+  vscode.env.openExternal(vscode.Uri.parse(uri, true))
+}
+
 function showProjectInDashboard(projectNode) {
   const landscapeName = _.get(projectNode, 'cloudResource.landscape.name')
   const dashboardUrl = getDashboardUrl(landscapeName)
@@ -150,7 +169,7 @@ function showProjectInDashboard(projectNode) {
 
   const namespace = _.get(projectNode, 'cloudResource.namespace')
 
-  const uri = urljoin(dashboardUrl, '/namespace/', namespace, '/shoots')
+  const uri = urljoin(dashboardUrl, '/namespace/', namespace, '/administration')
   vscode.env.openExternal(vscode.Uri.parse(uri, true))
 }
 
@@ -166,15 +185,15 @@ function showLandscapeInDashboard(projectNode) {
 }
 
 function createShoot (commandTarget) {
-  const shootNode = getNode(commandTarget, "project")
+  const folderNode = getNode(commandTarget, "folder")
 
-  const landscapeName = _.get(shootNode, 'cloudResource.landscape.name')
+  const landscapeName = _.get(folderNode, 'cloudResource.parent.landscape.name')
   const dashboardUrl = getDashboardUrl(landscapeName)
   if (!dashboardUrl) {
     return
   }
 
-  const namespace = _.get(shootNode, 'cloudResource.namespace')
+  const namespace = _.get(folderNode, 'cloudResource.parent.namespace')
 
   const uri = urljoin(dashboardUrl, '/namespace/', namespace, '/shoots/create/ui')
   vscode.env.openExternal(vscode.Uri.parse(uri, true))
