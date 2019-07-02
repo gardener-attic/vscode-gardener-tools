@@ -24,3 +24,6 @@ vscode-gardener-tools:
     head-update:
       traits:
         draft_release: ~
+    pull-request:
+      traits:
+        pull-request: ~
