@@ -1,0 +1,22 @@
+vscode-gardener-tools:
+  jobs:
+    release:
+      traits:
+        version:
+          preprocess: 'finalize'
+          inject_effective_version: True
+        release:
+          nextversion: 'bump_major'
+          rebase_before_release: True
+          release_callback: '.ci/prepare_release'
+      steps:
+        build:
+          execute: 'build.sh'
+          output_dir: 'out'
+          timeout: '5m'
+        update-release:
+          execute: 'update-release.py'
+          depends:
+          - 'release'
+          inputs:
+            OUT_PATH: 'out'
