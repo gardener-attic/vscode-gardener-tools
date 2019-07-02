@@ -22,7 +22,8 @@ This vs-code extension allows you to work with your gardener projects, shoots, p
 ## Install from VSIX
 
 * Download .vsix file from latest [release](https://github.com/gardener/vscode-gardener-tools/releases) asset
-* In VSCode, open the [command palette](https://code.visualstudio.com/docs/getstarted/tips-and-tricks#_command-palette): `View` -> `Command Palette...` -> type in `Extensions: Install from VSIX...` 
+* In VSCode, open the [command palette](https://code.visualstudio.com/docs/getstarted/tips-and-tricks#_command-palette): `View` -> `Command Palette...` -> type in `Extensions: Install from VSIX...`
+* Choose .vsix file downloaded in first step 
 
 ## Extension Settings
 
