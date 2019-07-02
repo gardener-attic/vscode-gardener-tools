@@ -2,9 +2,13 @@
 set -e
 if [ -z "$OUT_PATH" ]; then
   OUT_PATH="$(readlink -f $(dirname ${0})/../out)"
+else
+  OUT_PATH="$(readlink -f $OUT_PATH)"
 fi
 
-apt-get install -y npm
+pushd "${MAIN_REPO_DIR}"
+
+apk add npm
 npm install
 
 npm install -g vsce
