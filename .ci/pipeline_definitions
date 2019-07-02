@@ -20,3 +20,7 @@ vscode-gardener-tools:
           - 'release'
           inputs:
             OUT_PATH: 'out'
+  variants:
+    head-update:
+      traits:
+        draft_release: ~
