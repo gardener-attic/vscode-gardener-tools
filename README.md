@@ -10,12 +10,19 @@ This vs-code extension allows you to work with your gardener projects, shoots, p
 - List shoot clusters
 - List plant clusters
 - List seed clusters
-- Save kubeconfig / merge into kubeconfig of landscape, shoot, plant and seed cluster
-- Show In Dashboard
+- Right click on landscape, shoot, plant or seed cluster to `Save Kubeconfig` / `Merge into Kubeconfig`
+- Right click landscape or shoot to `Show In Dashboard`
+- Right click on landscape to `Create Project` in gardener dashboard
+- Right click on shoots list to `Create Shoot` in gardener dashboard
 
 ## Requirements
 
 - Kubeconfig to (virtual) garden cluster
+
+## Install from VSIX
+
+* Download .vsix file from latest [release](https://github.com/gardener/vscode-gardener-tools/releases) asset
+* In VSCode, open the [command palette](https://code.visualstudio.com/docs/getstarted/tips-and-tricks#_command-palette): `View` -> `Command Palette...` -> type in `Extensions: Install from VSIX...` 
 
 ## Extension Settings
 
