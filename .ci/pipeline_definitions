@@ -28,4 +28,5 @@ vscode-gardener-tools:
             OUT_PATH: 'out'
     head-update:
       traits:
+        version: ~
         draft_release: ~
