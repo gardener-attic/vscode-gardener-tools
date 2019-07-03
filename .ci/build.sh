@@ -8,10 +8,10 @@ fi
 
 pushd "${MAIN_REPO_DIR}"
 
+apk add npm
 # Work around thread stack size limit
 npm config set unsafe-perm true
 
-apk add npm
 npm install
 
 npm install -g vsce
