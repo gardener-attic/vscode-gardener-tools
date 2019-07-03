@@ -9,12 +9,12 @@ vscode-gardener-tools:
           nextversion: 'bump_minor'
           rebase_before_release: True
           release_callback: '.ci/prepare_release'
-        #slack:
-          #default_channel: 'internal_scp_workspace'
-          #channel_cfgs:
-            #internal_scp_workspace:
-              #channel_name: 'k8s-gardener'
-              #slack_cfg_name: 'scp_workspace'
+        slack:
+          default_channel: 'internal_scp_workspace'
+          channel_cfgs:
+            internal_scp_workspace:
+              channel_name: 'k8s-gardener'
+              slack_cfg_name: 'scp_workspace'
       steps:
         build:
           execute: 'build.sh'
