@@ -6,7 +6,7 @@ vscode-gardener-tools:
           preprocess: 'finalize'
           inject_effective_version: True
         release:
-          nextversion: 'bump_major'
+          nextversion: 'bump_minor'
           rebase_before_release: True
           release_callback: '.ci/prepare_release'
         slack:
