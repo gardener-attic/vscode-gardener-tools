@@ -8,6 +8,9 @@ fi
 
 pushd "${MAIN_REPO_DIR}"
 
+# Work around thread stack size limit
+npm config set unsafe-perm true
+
 apk add npm
 npm install
 
