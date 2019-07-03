@@ -22,7 +22,7 @@ version_file_path = repo_path / VERSION_FILE_NAME
 version_file_contents = version_file_path.read_text()
 
 cfg_factory = util.ctx().cfg_factory()
-github_cfg = cfg_factory.github()
+github_cfg = cfg_factory.github('github_com')
 
 github_repo_helper = GitHubRepositoryHelper(
     owner=repo_owner,
