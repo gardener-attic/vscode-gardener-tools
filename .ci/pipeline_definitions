@@ -25,7 +25,7 @@ vscode-gardener-tools:
           depends:
           - 'release'
           inputs:
-            OUT_PATH: 'out'
+            OUT_PATH: 'out_path'
     head-update:
       traits:
         version: ~
