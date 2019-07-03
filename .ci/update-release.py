@@ -8,7 +8,7 @@ from github.util import GitHubRepositoryHelper
 OUTPUT_FILE_NAME='build-result'
 VERSION_FILE_NAME='VERSION'
 
-repo_owner_and_name = util.check_env('SOURCE_GITHUB_REPO_AND_OWNER')
+repo_owner_and_name = util.check_env('SOURCE_GITHUB_REPO_OWNER_AND_NAME')
 repo_dir = util.check_env('MAIN_REPO_DIR')
 output_dir = util.check_env('OUT_PATH')
 
