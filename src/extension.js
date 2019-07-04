@@ -377,9 +377,9 @@ function createShoot(commandTarget) {
 }
 
 function createProject(commandTarget) {
-  const shootNode = getNode(commandTarget, "landscape")
+  const projectFolder = getNode(commandTarget, "folder")
 
-  const landscapeName = _.get(shootNode, 'name')
+  const landscapeName = _.get(projectFolder, 'parent.name')
   const dashboardUrl = getDashboardUrl(landscapeName)
   if (!dashboardUrl) {
     return

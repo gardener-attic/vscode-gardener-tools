@@ -126,7 +126,7 @@
         },
         {
           "command": "vs-gardener.createProject",
-          "when": "viewItem =~ /gardener\\.landscape/i"
+          "when": "viewItem =~ /gardener\\.folder.project/i"
         },
         {
           "command": "vs-gardener.target",
