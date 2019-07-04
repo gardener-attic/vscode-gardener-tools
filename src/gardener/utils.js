@@ -25,7 +25,7 @@ function configForLandscape(landscapeName) {
   return _.find(landscapes, landscape => landscape.name === landscapeName)
 }
 
-function decodeBase64 (value) {
+function decodeBase64(value) {
   if (!value) {
     return
   }

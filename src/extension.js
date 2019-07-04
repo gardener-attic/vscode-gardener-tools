@@ -23,13 +23,15 @@ const k8s = require('vscode-kubernetes-tools-api')
 const _ = require('lodash')
 const urljoin = require('url-join')
 const fs = require('fs')
+var tmp = require('tmp')
 
 const {
   GardenerTreeProvider,
   nodeType
 } = require('./gardener/gardener-tree')
 const {
-  SecretClient
+  SecretClient,
+  NodeClient
 } = require('./gardener/client')
 const {
   configForLandscape,
@@ -40,12 +42,17 @@ const {
   kubefsUri,
   KubernetesResourceVirtualFileSystemProvider
 } = require('./gardener/virtualfs')
+const {
+  GardenctlImpl
+} = require('./gardener/vscodeUtils')
 
 // this method is called when your extension is activated
 // your extension is activated the very first time the command is executed
 
+tmp.setGracefulCleanup() // cleanup temporary files even when an uncaught exception occurs
 const explorer = new GardenerTreeProvider()
 let cloudExplorer
+let gardenctlInst
 
 /**
  * @param {vscode.ExtensionContext} context
@@ -55,14 +62,14 @@ async function activate(context) {
   if (clusterExplorerAPI.available) {
     cloudExplorer = clusterExplorerAPI.api
     cloudExplorer.registerCloudProvider({
-        cloudName: "Gardener",
-        treeDataProvider: explorer,
-        getKubeconfigYaml: getKubeconfig
+      cloudName: "Gardener",
+      treeDataProvider: explorer,
+      getKubeconfigYaml: getKubeconfig
     })
 
     const kubectl = await k8s.extension.kubectl.v1
     if (!kubectl.available) {
-        throw new Error('kubectl not available')
+      throw new Error('kubectl not available')
     }
     const resourceDocProvider = new KubernetesResourceVirtualFileSystemProvider(kubectl, vscode.workspace.rootPath)
 
@@ -71,12 +78,15 @@ async function activate(context) {
       vscode.commands.registerCommand('vs-gardener.createShoot', createShoot),
       vscode.commands.registerCommand('vs-gardener.createProject', createProject),
       vscode.commands.registerCommand('vs-gardener.loadResource', loadResource),
+      vscode.commands.registerCommand('vs-gardener.target', target),
+      vscode.commands.registerCommand('vs-gardener.shell', shell),
       vscode.workspace.registerFileSystemProvider(K8S_RESOURCE_SCHEME, resourceDocProvider, { /* TODO: case sensitive? */ })
     ]
 
     context.subscriptions.push(...subscriptions)
+    gardenctlInst = new GardenctlImpl()
   } else {
-      vscode.window.showWarningMessage(clusterExplorerAPI.reason)
+    vscode.window.showWarningMessage(clusterExplorerAPI.reason)
   }
 }
 exports.activate = activate
@@ -95,7 +105,7 @@ async function loadResource(target) {
   try {
     const doc = await vscode.workspace.openTextDocument(uri)
     if (doc) {
-        vscode.window.showTextDocument(doc)
+      vscode.window.showTextDocument(doc)
     }
   } catch (err) {
     vscode.window.showErrorMessage(`Error loading document: ${err}`)
@@ -112,8 +122,8 @@ function getNamespaceFromTarget(target) {
 
 function showInDashboard(commandTarget) {
   const node = getNode(commandTarget)
-  const targetNodeType = _.get(node, 'cloudResource.nodeType')
-  const targetChildType = _.get(node, 'cloudResource.childType')
+  const targetNodeType = _.get(node, 'nodeType')
+  const targetChildType = _.get(node, 'childType')
 
   switch (targetNodeType) {
     case nodeType.NODE_TYPE_SHOOT:
@@ -134,47 +144,47 @@ function showInDashboard(commandTarget) {
 }
 
 function showShootInDashboard(shootNode) {
-  const landscapeName = _.get(shootNode, 'cloudResource.project.landscape.name')
+  const landscapeName = _.get(shootNode, 'project.landscape.name')
   const dashboardUrl = getDashboardUrl(landscapeName)
   if (!dashboardUrl) {
     return
   }
 
-  const name = _.get(shootNode, 'cloudResource.name')
-  const namespace = _.get(shootNode, 'cloudResource.project.namespace')
+  const name = _.get(shootNode, 'name')
+  const namespace = _.get(shootNode, 'project.namespace')
 
   const uri = urljoin(dashboardUrl, '/namespace/', namespace, '/shoots/', name)
   vscode.env.openExternal(vscode.Uri.parse(uri, true))
 }
 
-function showShootsInDashboard(projectNode) {
-  const landscapeName = _.get(projectNode, 'cloudResource.parent.landscape.name')
+function showShootsInDashboard(node) {
+  const landscapeName = _.get(node, 'parent.landscape.name')
   const dashboardUrl = getDashboardUrl(landscapeName)
   if (!dashboardUrl) {
     return
   }
 
-  const namespace = _.get(projectNode, 'cloudResource.parent.namespace')
+  const namespace = _.get(node, 'parent.namespace')
 
   const uri = urljoin(dashboardUrl, '/namespace/', namespace, '/shoots')
   vscode.env.openExternal(vscode.Uri.parse(uri, true))
 }
 
 function showProjectInDashboard(projectNode) {
-  const landscapeName = _.get(projectNode, 'cloudResource.landscape.name')
+  const landscapeName = _.get(projectNode, 'landscape.name')
   const dashboardUrl = getDashboardUrl(landscapeName)
   if (!dashboardUrl) {
     return
   }
 
-  const namespace = _.get(projectNode, 'cloudResource.namespace')
+  const namespace = _.get(projectNode, 'namespace')
 
   const uri = urljoin(dashboardUrl, '/namespace/', namespace, '/administration')
   vscode.env.openExternal(vscode.Uri.parse(uri, true))
 }
 
-function showLandscapeInDashboard(projectNode) {
-  const landscapeName = _.get(projectNode, 'cloudResource.name')
+function showLandscapeInDashboard(node) {
+  const landscapeName = _.get(node, 'name')
   const dashboardUrl = getDashboardUrl(landscapeName)
   if (!dashboardUrl) {
     return
@@ -184,25 +194,193 @@ function showLandscapeInDashboard(projectNode) {
   vscode.env.openExternal(vscode.Uri.parse(uri, true))
 }
 
-function createShoot (commandTarget) {
+async function shell(commandTarget) {
+  const node = getNode(commandTarget)
+  const targetNodeType = _.get(node, 'nodeType')
+  const supportedTypes = [nodeType.NODE_TYPE_SHOOT, nodeType.NODE_TYPE_SEED]
+  if (!_.includes(supportedTypes, targetNodeType)) {
+    return
+  }
+
+  let cleanupCallback = () => { }
+  try {
+    const name = _.get(node, 'name')
+    const landscapeName = getLandscapeNameFromNode(node)
+    const kubeconfig = await getKubeconfig(node)
+    const projectName = getProjectNamespaceFromNode(node) // TODO project name
+    const kubeconfigTempObj = await writeKubeconfigToTempfile(kubeconfig)
+    cleanupCallback = kubeconfigTempObj.cleanupCallback
+
+    const clusterNode = await selectNode(kubeconfigTempObj.filePath)
+    cleanupCallback() // cleanup kubeconfig tempfile
+    if (!clusterNode) {
+      return
+    }
+    if (targetNodeType === nodeType.NODE_TYPE_SHOOT) {
+      await targetShoot(landscapeName, projectName, name, false)
+    } else {
+      await targetSeed(landscapeName, name, false)
+    }
+
+    const gardenName = getGardenName(landscapeName)
+    await openShell(gardenName, projectName, targetNodeType, name, clusterNode)
+  } catch (error) {
+    cleanupCallback()
+    vscode.window.showErrorMessage(error.message)
+  }
+}
+
+async function selectNode(kubeconfig) {
+  const nodeClient = new NodeClient(kubeconfig)
+  const nodes = await nodeClient.list()
+
+  if (_.isEmpty(nodes)) {
+    vscode.window.showInformationMessage('This cluster currently does not have any nodes')
+    return null;
+  }
+
+  const pickItems = _.map(nodes, node => {
+    return {
+      label: node.metadata.name,
+      description: '',
+      detail: '', // TODO stringify
+      node: node.metadata.name
+    }
+  })
+
+  const value = await vscode.window.showQuickPick(pickItems, { placeHolder: "Select node" });
+
+  if (!value) {
+    return null;
+  }
+
+  return value.node;
+}
+
+async function openShell(gardenName, projectName = undefined, clusterType, clusterName, clusterNode) {
+  const terminalShellCmd = ['shell', clusterNode];
+  let terminalName = `shell on ${gardenName}`
+  if (projectName) {
+    terminalName += `/${projectName}`
+  }
+  terminalName += `/${clusterType}/${clusterName}/${clusterNode}`
+
+  await gardenctlInst.runAsTerminal(terminalShellCmd, terminalName);
+}
+
+async function target(commandTarget) {
+  try {
+    const node = getNode(commandTarget)
+    const targetNodeType = _.get(node, 'nodeType')
+
+    switch (targetNodeType) {
+      case nodeType.NODE_TYPE_SHOOT:
+        await targetShootNode(node)
+        break
+      case nodeType.NODE_TYPE_SEED:
+        await targetSeedNode(node)
+        break
+      case nodeType.NODE_TYPE_PROJECT:
+        await targetProjectNode(node)
+        break
+      case nodeType.NODE_TYPE_LANDSCAPE:
+        await targetLandscape(getLandscapeNameFromNode(node))
+        break
+    }
+  } catch (error) {
+    vscode.window.showErrorMessage(error.message)
+  }
+}
+
+async function targetProjectNode(node, inTerminal = true) {
+  const landscapeName = getLandscapeNameFromNode(node)
+  const projectName = getProjectNamespaceFromNode(node) // TODO projectName
+  return targetProject(landscapeName, projectName, inTerminal)
+}
+
+async function targetShootNode(node, inTerminal = true) {
+  const name = _.get(node, 'name')
+  const landscapeName = getLandscapeNameFromNode(node)
+  const projectName = getProjectNamespaceFromNode(node)
+  return targetShoot(landscapeName, projectName, name, inTerminal)
+}
+
+async function targetSeedNode(node, inTerminal = true) {
+  const name = _.get(node, 'name')
+  const landscapeName = getLandscapeNameFromNode(node)
+  return targetSeed(landscapeName, name, inTerminal)
+}
+
+function getLandscapeNameFromNode(node) {
+  return _.get(node, 'project.landscape.name',
+    _.get(node, 'landscape.name',
+      _.get(node, 'name')
+    )
+  )
+}
+
+function getProjectNamespaceFromNode(node) {
+  return _.get(node, 'project.namespace',
+    _.get(node, 'namespace')
+  )
+}
+
+async function targetLandscape(landscapeName, inTerminal = true) {
+  const gardenName = getGardenName(landscapeName)
+
+  const cmd = `target garden ${gardenName}`
+  if (inTerminal) {
+    return gardenctlInst.invokeInSharedTerminal(cmd)
+  }
+  return gardenctlInst.invoke(cmd)
+}
+
+async function targetProject(landscapeName, projectNamespace, inTerminal = true) {
+  await targetLandscape(landscapeName, false)
+  const cmd = `target project ${projectNamespace}` // TODO change to project name once supported by gardenctl
+  if (inTerminal) {
+    return gardenctlInst.invokeInSharedTerminal(cmd)
+  }
+  return gardenctlInst.invoke(cmd)
+}
+
+async function targetShoot(landscapeName, projectNamespace, name, inTerminal = true) {
+  await targetProject(landscapeName, projectNamespace, false) // TODO currently gardenctl does not allow to set garden and project as options so we need to target it one by one
+  const cmd = `target shoot ${name}`
+  if (inTerminal) {
+    return gardenctlInst.invokeInSharedTerminal(cmd)
+  }
+  return gardenctlInst.invoke(cmd)
+}
+
+async function targetSeed(landscapeName, name, inTerminal = true) {
+  await targetLandscape(landscapeName, false)
+  const cmd = `target seed ${name}`
+  if (inTerminal) {
+    return gardenctlInst.invokeInSharedTerminal(cmd)
+  }
+  return gardenctlInst.invoke(cmd)
+}
+
+function createShoot(commandTarget) {
   const folderNode = getNode(commandTarget, "folder")
 
-  const landscapeName = _.get(folderNode, 'cloudResource.parent.landscape.name')
+  const landscapeName = _.get(folderNode, 'parent.landscape.name')
   const dashboardUrl = getDashboardUrl(landscapeName)
   if (!dashboardUrl) {
     return
   }
 
-  const namespace = _.get(folderNode, 'cloudResource.parent.namespace')
+  const namespace = _.get(folderNode, 'parent.namespace')
 
   const uri = urljoin(dashboardUrl, '/namespace/', namespace, '/shoots/create/ui')
   vscode.env.openExternal(vscode.Uri.parse(uri, true))
 }
 
-function createProject (commandTarget) {
+function createProject(commandTarget) {
   const shootNode = getNode(commandTarget, "landscape")
 
-  const landscapeName = _.get(shootNode, 'cloudResource.name')
+  const landscapeName = _.get(shootNode, 'name')
   const dashboardUrl = getDashboardUrl(landscapeName)
   if (!dashboardUrl) {
     return
@@ -212,7 +390,7 @@ function createProject (commandTarget) {
   vscode.env.openExternal(vscode.Uri.parse(uri, true))
 }
 
-function getDashboardUrl (landscapeName) {
+function getDashboardUrl(landscapeName) {
   const config = configForLandscape(landscapeName)
   const dashboardUrl = _.get(config, 'dashboardUrl')
   if (!dashboardUrl) {
@@ -222,8 +400,13 @@ function getDashboardUrl (landscapeName) {
   return dashboardUrl
 }
 
+function getGardenName(landscapeName) {
+  const config = configForLandscape(landscapeName)
+  return _.get(config, 'gardenName', landscapeName)
+}
+
 function getNode(commandTarget, type = undefined) {
-  const node = resolveCommand(commandTarget)
+  let node = _.get(resolveCommand(commandTarget), 'cloudResource')
   if (!node) {
     return
   }
@@ -231,7 +414,7 @@ function getNode(commandTarget, type = undefined) {
   if (!type) {
     return node
   }
-  if (_.get(node, 'cloudResource.nodeType') !== type) {
+  if (_.get(node, 'nodeType') !== type) {
     return
   }
   return node
@@ -242,7 +425,7 @@ function resolveCommand(commandTarget) {
     return undefined
   }
   if (!cloudExplorer) {
-      return undefined
+    return undefined
   }
   return cloudExplorer.resolveCommandTarget(commandTarget)
 }
@@ -258,11 +441,33 @@ async function getKubeconfig(target) {
   }
 }
 
+async function writeKubeconfigToTempfile(kubeconfig) {
+  return new Promise(function (resolve, reject) {
+    tmp.file(function _tempFileCreated(err, filePath, fd, cleanupCallback) {
+      if (err) {
+        reject(err)
+      }
+      const options = {
+        encoding: 'utf8'
+      }
+      fs.writeFile(filePath, kubeconfig, options, err => {
+        if (err) {
+          reject(err)
+        }
+        resolve({
+          filePath,
+          cleanupCallback
+        })
+      })
+    })
+  })
+}
+
 async function getLandscapeKubeconfig(landscape) {
   const kubeconfigPath = landscape.kubeconfig
-  return new Promise(function(resolve, reject){
+  return new Promise(function (resolve, reject) {
     fs.readFile(kubeconfigPath, "utf8", (err, data) => {
-        err ? reject(err) : resolve(data)
+      err ? reject(err) : resolve(data)
     })
   })
 }
@@ -276,9 +481,9 @@ async function getClusterTypeKubeconfig(target) {
 }
 
 // this method is called when your extension is deactivated
-function deactivate() {}
+function deactivate() { }
 
 module.exports = {
-	activate,
-	deactivate
+  activate,
+  deactivate
 }

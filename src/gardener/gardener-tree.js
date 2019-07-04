@@ -87,8 +87,9 @@ class GardenerTreeProvider {
       const treeItem = new vscode.TreeItem(
         label,
         vscode.TreeItemCollapsibleState.None
-        )
-      treeItem.contextValue = `gardener.shoot ${k8s.CloudExplorerV1.SHOW_KUBECONFIG_COMMANDS_CONTEXT}`
+      )
+      const hibernated = element.hibernated ? '.hibernated' : ''
+      treeItem.contextValue = `gardener.shoot${hibernated} ${k8s.CloudExplorerV1.SHOW_KUBECONFIG_COMMANDS_CONTEXT}`
       treeItem.command = getLoadResourceCommand(element)
       treeItem.iconPath = infraIcon(element.cloudType)
       treeItem.tooltip = shootTooltip(element)
@@ -97,7 +98,7 @@ class GardenerTreeProvider {
       const treeItem = new vscode.TreeItem(
         getDisplayName(element),
         vscode.TreeItemCollapsibleState.None
-        )
+      )
       treeItem.contextValue = `gardener.plant ${k8s.CloudExplorerV1.SHOW_KUBECONFIG_COMMANDS_CONTEXT}`
       treeItem.command = getLoadResourceCommand(element)
       treeItem.iconPath = infraIcon(element.cloudType)
@@ -107,7 +108,7 @@ class GardenerTreeProvider {
       const treeItem = new vscode.TreeItem(
         getDisplayName(element),
         vscode.TreeItemCollapsibleState.None
-        )
+      )
       treeItem.contextValue = `gardener.seed ${k8s.CloudExplorerV1.SHOW_KUBECONFIG_COMMANDS_CONTEXT}`
       treeItem.command = getLoadResourceCommand(element)
       treeItem.iconPath = infraIcon(element.cloudType)
@@ -139,7 +140,7 @@ class GardenerTreeProvider {
 
 module.exports = { GardenerTreeProvider, nodeType }
 
-function getLoadResourceCommand (element) {
+function getLoadResourceCommand(element) {
   return {
     command: 'vs-gardener.loadResource',
     title: 'Load',
@@ -147,7 +148,7 @@ function getLoadResourceCommand (element) {
   }
 }
 
-function getDisplayName (element) {
+function getDisplayName(element) {
   return element.displayName || element.name
 }
 
@@ -168,7 +169,7 @@ function asLandscapeTreeNode(name, kubeconfig) {
   }
 }
 
-async function clusterScopedResources (landscape) {
+async function clusterScopedResources(landscape) {
   const accessReview = new SelfSubjectAccessReviewClient(landscape.kubeconfig)
   const canIGetSeeds = await accessReview.canI('get', 'seeds')
   const clusterScopedResources = [
@@ -340,33 +341,33 @@ function seedTooltip(element) {
   return list.join('\n')
 }
 
-function getCloudType (object) {
+function getCloudType(object) {
   const cloudTypes = ['aws', 'azure', 'gcp', 'openstack', 'alicloud']
   return _.head(_.intersection(_.keys(object), cloudTypes))
 }
 
-function infraIcon (cloudType) {
+function infraIcon(cloudType) {
   const color = iconColor()
   let logo
-  switch(cloudType) {
+  switch (cloudType) {
     case 'aws':
       logo = `aws-${color}.svg`
       break
     case 'azure':
-        logo = `azure-${color}.svg`
-        break
+      logo = `azure-${color}.svg`
+      break
     case 'gcp':
-        logo = `gcp-${color}.svg`
-        break
+      logo = `gcp-${color}.svg`
+      break
     case 'openstack':
-        logo = `openstack-${color}.svg`
-        break
+      logo = `openstack-${color}.svg`
+      break
     case 'alicloud':
-        logo = `alicloud-${color}.svg`
-        break
+      logo = `alicloud-${color}.svg`
+      break
     case 'gce':
-        logo = `gce-${color}.svg`
-        break
+      logo = `gce-${color}.svg`
+      break
     case 'gke':
       logo = `gke-${color}.svg`
       break
@@ -376,7 +377,7 @@ function infraIcon (cloudType) {
   return vscode.Uri.file(path.join(__dirname, `../assets/${logo}`))
 }
 
-function iconColor () {
+function iconColor() {
   const config = vscode.workspace.getConfiguration('vscode-gardener-tools', null)
   const lightTheme = _.get(config, 'vscode-light-theme', true)
   if (lightTheme) {

@@ -32,7 +32,7 @@ class Kubectl {
   async cmd(command, parseFormat = 'json') {
     const kubectl = await k8s.extension.kubectl.v1;
     if (!kubectl.available) {
-        throw new Error('kubectl not available')
+      throw new Error('kubectl not available')
     }
 
     const { code, stderr, stdout } = await kubectl.api.invokeCommand(command)
@@ -57,19 +57,19 @@ class Client extends Kubectl {
     this.kindPlural = kindPlural
   }
 
-  namespaceSelector () {
+  namespaceSelector() {
     if (this.namespace) {
       return `-n ${this.namespace}`
     }
     return ''
   }
 
-  async list () {
+  async list() {
     const { items } = await this.cmd(`get ${this.kindPlural} ${this.namespaceSelector()} -o json --kubeconfig ${this.kubeconfig}`)
     return items
   }
 
-  async get (name, outputFormat = 'json') {
+  async get(name, outputFormat = 'json') {
     return this.cmd(`get ${this.kindPlural}/${name} -n ${this.namespace} -o ${outputFormat} --kubeconfig ${this.kubeconfig}`)
   }
 }
@@ -81,11 +81,11 @@ class ProjectClient extends Client {
     this.landscapeName = landscapeName
   }
 
-  async list () {
+  async list() {
     const config = configForLandscape(this.landscapeName)
     const projectNames = _.get(config, 'projects')
     if (!_.isEmpty(projectNames)) {
-      const promises = _.map(projectNames, projectName => this.cmd(`get project ${projectName} -o json --kubeconfig ${this.kubeconfig}`).catch((err)=> { console.log(err) }))
+      const promises = _.map(projectNames, projectName => this.cmd(`get project ${projectName} -o json --kubeconfig ${this.kubeconfig}`).catch((err) => { console.log(err) }))
       let projects = await Promise.all(promises)
       projects = _.filter(projects, project => project !== undefined)
       return projects
@@ -127,6 +127,13 @@ class CloudProfileClient extends Client {
   }
 }
 
+class NodeClient extends Client {
+  constructor(kubeconfig) {
+    const namespace = undefined // Nodes is a cluster scoped resource
+    super(kubeconfig, namespace, 'nodes')
+  }
+}
+
 class SelfSubjectAccessReviewClient extends Kubectl {
   constructor(kubeconfig) {
     const namespace = undefined
@@ -135,9 +142,9 @@ class SelfSubjectAccessReviewClient extends Kubectl {
 
   async canI(verb, kindPlural) {
     const res = _.trim(await this.cmd(`auth can-i ${verb} ${kindPlural} --kubeconfig ${this.kubeconfig}`, 'raw')
-    .catch((err)=> {
-      console.log(err)
-    }))
+      .catch((err) => {
+        console.log(err)
+      }))
     return res === 'yes'
   }
 }
@@ -149,5 +156,6 @@ module.exports = {
   SeedClient,
   SecretClient,
   CloudProfileClient,
-  SelfSubjectAccessReviewClient
+  SelfSubjectAccessReviewClient,
+  NodeClient
 }
