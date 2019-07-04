@@ -47,6 +47,10 @@
                     "type": "string",
                     "description": "Name of the garden cluster"
                   },
+                  "gardenName": {
+                    "type": "string",
+                    "description": "Optional Name of the corresponding (gardenctl) garden. Default: Name of the landscape"
+                  },
                   "kubeconfigPath": {
                     "type": "string",
                     "description": "Path to the kubeconfig of the garden cluster"
@@ -86,6 +90,16 @@
         "command": "vs-gardener.createProject",
         "title": "Create Project",
         "category": "Gardener"
+      },
+      {
+        "command": "vs-gardener.target",
+        "title": "Target",
+        "category": "Gardener"
+      },
+      {
+        "command": "vs-gardener.shell",
+        "title": "Shell",
+        "category": "Gardener"
       }
     ],
     "menus": {
@@ -113,12 +127,37 @@
         {
           "command": "vs-gardener.createProject",
           "when": "viewItem =~ /gardener\\.landscape/i"
+        },
+        {
+          "command": "vs-gardener.target",
+          "when": "viewItem =~ /gardener\\.landscape/i"
+        },
+        {
+          "command": "vs-gardener.target",
+          "when": "viewItem =~ /gardener\\.project/i"
+        },
+        {
+          "command": "vs-gardener.target",
+          "when": "viewItem =~ /gardener\\.shoot/i"
+        },
+        {
+          "command": "vs-gardener.target",
+          "when": "viewItem =~ /gardener\\.seed/i"
+        },
+        {
+          "command": "vs-gardener.shell",
+          "when": "viewItem =~ /gardener\\.shoot(?!\\.hibernated)/i"
+        },
+        {
+          "command": "vs-gardener.shell",
+          "when": "viewItem =~ /gardener\\.seed/i"
         }
       ]
     }
   },
   "scripts": {
-    "postinstall": "node ./node_modules/vscode/bin/install"
+    "postinstall": "node ./node_modules/vscode/bin/install",
+    "lint": "eslint --ext .js src"
   },
   "devDependencies": {
     "@types/mocha": "^2.2.42",
@@ -130,6 +169,8 @@
   },
   "dependencies": {
     "lodash": "^4.17.11",
+    "shelljs": "^0.8.3",
+    "tmp": "^0.1.0",
     "url-join": "^4.0.0",
     "vscode-kubernetes-tools-api": "^1.0.0"
   }
