@@ -15,7 +15,7 @@ This vs-code extension allows you to work with your gardener projects, shoots, p
 - Right click on landscape to `Create Project` in gardener dashboard
 - Right click on shoots list to `Create Shoot` in gardener dashboard
 - [Gardenctl](https://github.com/gardener/gardenctl) integration
-  - Right click on shoot or seed to create a `Shell` into a node
+  - Right click on shoot or seed to get a `Shell` to a node
   - Right click on landscape, project, shoot or seed to `Target` with gardenctl
 
 ## Requirements
