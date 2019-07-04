@@ -227,3 +227,7 @@ Copyright (c) Microsoft Corporation. All rights reserved.
 - [vscode-kubernetes-tools-api](https://github.com/Azure/vscode-kubernetes-tools-api)\
 Copyright (c) Microsoft Corporation. All rights reserved.
 [MIT License](https://github.com/Azure/vscode-kubernetes-tools-api/blob/master/LICENSE)
+
+- [shelljs-exec-proxy](https://github.com/nfischer/shelljs-exec-proxy)\
+Copyright (c) 2016 Nathan Fischer
+[MIT License](https://github.com/nfischer/shelljs-exec-proxy/blob/master/LICENSE)

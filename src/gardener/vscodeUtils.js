@@ -28,7 +28,7 @@
 
 const vscode = require('vscode')
 const path = require('path')
-const shelljs = require('shelljs')
+const shellProxy = require('shelljs-exec-proxy');
 const sysfs = require('fs')
 const _ = require('lodash')
 
@@ -112,7 +112,7 @@ async function checkForBinary (context, bin, binName, inferFailedMessage, config
   if (!getUseWsl()) {
     context.binFound = sysfs.existsSync(bin)
   } else {
-    const sr = await context.shell.exec(`ls ${bin}`)
+    const sr = getShell().ls(bin)
     context.binFound = !!sr && sr.code === 0
   }
   if (context.binFound) {
@@ -127,21 +127,14 @@ async function checkForBinary (context, bin, binName, inferFailedMessage, config
 }
 
 async function findBinary (binName) {
-  let cmd = `which ${binName}`
+  let which = `which`
 
   if (isWindows()) {
-    cmd = `where.exe ${binName}.exe`
+    which = 'where.exe'
+    binName = `${binName}.exe`
   }
 
-  const opts = {
-    async: true,
-    env: {
-      HOME: process.env.HOME,
-      PATH: process.env.PATH
-    }
-  }
-
-  const execResult = await execCore(cmd, opts)
+  const execResult = getShell()[which](binName)
   if (execResult.code) {
     return { err: execResult.code, output: execResult.stderr }
   }
@@ -149,18 +142,12 @@ async function findBinary (binName) {
   return { err: null, output: execResult.stdout }
 }
 
-function execCore (cmd, opts, stdin) {
-  return new Promise(resolve => {
-    if (getUseWsl()) {
-      cmd = 'wsl ' + cmd
-    }
-    const proc = shelljs.exec(cmd, opts, (code, stdout, stderr) =>
-      resolve({ code: code, stdout: stdout, stderr: stderr })
-    )
-    if (stdin) {
-      proc.stdin.end(stdin)
-    }
-  })
+function getShell () {
+  const aShell = shellProxy
+  if (getUseWsl()) {
+    return aShell.wsl
+  }
+  return aShell
 }
 
 function alertNoBin (binName, failureReason, message, installDependencies) {
@@ -340,10 +327,10 @@ async function invokeInTerminal (context, command, pipeTo, terminal) {
   }
 }
 
-async function invoke (context, command) {
+async function invoke (context, shell, args) {
   return new Promise(async function (resolve, reject) {
     try {
-      await toolInternal(context, command, (code, stdout, stderr) => {
+      await toolInternal(context, shell, args, (code, stdout, stderr) => {
         if (code !== 0) {
           const errMessage = _.isEmpty(stderr) ? stdout : stderr
           reject(new Error(errMessage))
@@ -357,54 +344,16 @@ async function invoke (context, command) {
   })
 }
 
-async function toolInternal (context, command, handler) {
+async function toolInternal (context, shell, args, handler) {
   if (await checkPresent(context, CheckPresentMessageMode.Command)) {
-    const bin = await basePath(context.binName)
-    const cmd = `${bin} ${command}`
-    const sr = await exec(cmd)
+    // const bin = await basePath(context.binName)
+    // const cmd = `${bin} ${command}`
+    // const sr = await exec(cmd)
+    const sr = shell(...args)
     if (sr) {
       handler(sr.code, sr.stdout, sr.stderr)
     }
   }
-}
-
-function execOpts () {
-  let env = process.env
-  if (isWindows()) {
-    env = Object.assign({}, env, { HOME: home() })
-  }
-  env = shellEnvironment(env)
-  const opts = {
-    cwd: vscode.workspace.rootPath,
-    env: env,
-    async: true
-  }
-  return opts
-}
-
-async function exec (cmd, stdin) {
-  try {
-    return await execCore(cmd, execOpts(), null, stdin)
-  } catch (ex) {
-    vscode.window.showErrorMessage(ex)
-    return undefined
-  }
-}
-
-function home () {
-  if (getUseWsl()) {
-    return shelljs.exec('wsl.exe echo ${HOME}').stdout.trim()
-  }
-  return (
-    process.env['HOME'] ||
-    concatIfBoth(process.env['HOMEDRIVE'], process.env['HOMEPATH']) ||
-    process.env['USERPROFILE'] ||
-    ''
-  )
-}
-
-function concatIfBoth (s1, s2) {
-  return s1 && s2 ? s1.concat(s2) : undefined
 }
 
 function onDidCloseTerminal (listener) {
@@ -433,8 +382,11 @@ class GardenctlImpl {
   checkPresent (errorMessageMode) {
     return checkPresent(this.context, errorMessageMode)
   }
-  async invoke (command) {
-    return invoke(this.context, command)
+  getShell () {
+    return getShell()[this.context.binName]
+  }
+  async invoke (shell, ...args) {
+    return invoke(this.context, shell, args)
   }
   async invokeInNewTerminal (command, terminalName, onClose, pipeTo) {
     const terminal = createTerminal(terminalName)

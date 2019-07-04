@@ -328,38 +328,35 @@ function getProjectNamespaceFromNode(node) {
 async function targetLandscape(landscapeName, inTerminal = true) {
   const gardenName = getGardenName(landscapeName)
 
-  const cmd = `target garden ${gardenName}`
   if (inTerminal) {
-    return gardenctlInst.invokeInSharedTerminal(cmd)
+    return gardenctlInst.invokeInSharedTerminal(`target garden ${gardenName}`)
   }
-  return gardenctlInst.invoke(cmd)
+
+  return gardenctlInst.invoke(gardenctlInst.getShell().target.garden, gardenName)
 }
 
 async function targetProject(landscapeName, projectNamespace, inTerminal = true) {
   await targetLandscape(landscapeName, false)
-  const cmd = `target project ${projectNamespace}` // TODO change to project name once supported by gardenctl
   if (inTerminal) {
-    return gardenctlInst.invokeInSharedTerminal(cmd)
+    return gardenctlInst.invokeInSharedTerminal(`target project ${projectNamespace}`) // TODO change to project name once supported by gardenctl
   }
-  return gardenctlInst.invoke(cmd)
+  return gardenctlInst.invoke(gardenctlInst.getShell().target.project, projectNamespace)
 }
 
 async function targetShoot(landscapeName, projectNamespace, name, inTerminal = true) {
   await targetProject(landscapeName, projectNamespace, false) // TODO currently gardenctl does not allow to set garden and project as options so we need to target it one by one
-  const cmd = `target shoot ${name}`
   if (inTerminal) {
-    return gardenctlInst.invokeInSharedTerminal(cmd)
+    return gardenctlInst.invokeInSharedTerminal(`target shoot ${name}`)
   }
-  return gardenctlInst.invoke(cmd)
+  return gardenctlInst.invoke(gardenctlInst.getShell().target.shoot, name)
 }
 
 async function targetSeed(landscapeName, name, inTerminal = true) {
   await targetLandscape(landscapeName, false)
-  const cmd = `target seed ${name}`
   if (inTerminal) {
-    return gardenctlInst.invokeInSharedTerminal(cmd)
+    return gardenctlInst.invokeInSharedTerminal(`target seed ${name}`)
   }
-  return gardenctlInst.invoke(cmd)
+  return gardenctlInst.invoke(gardenctlInst.getShell().target.seed, name)
 }
 
 function createShoot(commandTarget) {

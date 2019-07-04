@@ -169,7 +169,7 @@
   },
   "dependencies": {
     "lodash": "^4.17.11",
-    "shelljs": "^0.8.3",
+    "shelljs-exec-proxy": "^0.1.1",
     "tmp": "^0.1.0",
     "url-join": "^4.0.0",
     "vscode-kubernetes-tools-api": "^1.0.0"
