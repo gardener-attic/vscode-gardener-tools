@@ -231,3 +231,7 @@ Copyright (c) Microsoft Corporation. All rights reserved.
 - [shelljs-exec-proxy](https://github.com/nfischer/shelljs-exec-proxy)\
 Copyright (c) 2016 Nathan Fischer
 [MIT License](https://github.com/nfischer/shelljs-exec-proxy/blob/master/LICENSE)
+
+- [shell-escape](https://github.com/xxorax/node-shell-escape)\
+Copyright (c) 2015 Martin PANEL
+[MIT License](https://github.com/xxorax/node-shell-escape/blob/master/README.md)

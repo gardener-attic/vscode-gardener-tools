@@ -23,7 +23,9 @@ const k8s = require('vscode-kubernetes-tools-api')
 const _ = require('lodash')
 const urljoin = require('url-join')
 const fs = require('fs')
-var tmp = require('tmp')
+const tmp = require('tmp')
+const shellEsacpe = require('shell-escape')
+
 
 const {
   GardenerTreeProvider,
@@ -329,7 +331,7 @@ async function targetLandscape(landscapeName, inTerminal = true) {
   const gardenName = getGardenName(landscapeName)
 
   if (inTerminal) {
-    return gardenctlInst.invokeInSharedTerminal(`target garden ${gardenName}`)
+    return gardenctlInst.invokeInSharedTerminal(shellEsacpe(['target', 'garden', gardenName]))
   }
 
   return gardenctlInst.invoke(gardenctlInst.getShell().target.garden, gardenName)
@@ -338,7 +340,7 @@ async function targetLandscape(landscapeName, inTerminal = true) {
 async function targetProject(landscapeName, projectNamespace, inTerminal = true) {
   await targetLandscape(landscapeName, false)
   if (inTerminal) {
-    return gardenctlInst.invokeInSharedTerminal(`target project ${projectNamespace}`) // TODO change to project name once supported by gardenctl
+    return gardenctlInst.invokeInSharedTerminal(shellEsacpe(['target', 'project', projectNamespace])) // TODO change to project name once supported by gardenctl
   }
   return gardenctlInst.invoke(gardenctlInst.getShell().target.project, projectNamespace)
 }
@@ -346,7 +348,7 @@ async function targetProject(landscapeName, projectNamespace, inTerminal = true)
 async function targetShoot(landscapeName, projectNamespace, name, inTerminal = true) {
   await targetProject(landscapeName, projectNamespace, false) // TODO currently gardenctl does not allow to set garden and project as options so we need to target it one by one
   if (inTerminal) {
-    return gardenctlInst.invokeInSharedTerminal(`target shoot ${name}`)
+    return gardenctlInst.invokeInSharedTerminal(shellEsacpe(['target', 'shoot', name]))
   }
   return gardenctlInst.invoke(gardenctlInst.getShell().target.shoot, name)
 }
@@ -354,7 +356,7 @@ async function targetShoot(landscapeName, projectNamespace, name, inTerminal = t
 async function targetSeed(landscapeName, name, inTerminal = true) {
   await targetLandscape(landscapeName, false)
   if (inTerminal) {
-    return gardenctlInst.invokeInSharedTerminal(`target seed ${name}`)
+    return gardenctlInst.invokeInSharedTerminal(shellEsacpe(['target', 'seed', name]))
   }
   return gardenctlInst.invoke(gardenctlInst.getShell().target.seed, name)
 }

@@ -388,12 +388,6 @@ class GardenctlImpl {
   async invoke (shell, ...args) {
     return invoke(this.context, shell, args)
   }
-  async invokeInNewTerminal (command, terminalName, onClose, pipeTo) {
-    const terminal = createTerminal(terminalName)
-    const disposable = onClose ? onDidCloseTerminal(onClose) : new vscode.Disposable(() => {})
-    await invokeInTerminal(this.context, command, pipeTo, terminal)
-    return disposable
-  }
   invokeInSharedTerminal (command) {
     const terminal = this.getSharedTerminal()
     return invokeInTerminal(this.context, command, undefined, terminal)
