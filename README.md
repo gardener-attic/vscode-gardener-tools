@@ -16,7 +16,7 @@ This vs-code extension allows you to work with your gardener projects, shoots, p
 - Right click on shoots list to `Create Shoot` in gardener dashboard
 
 ## Requirements
-
+- You have installed the [Kubernetes Tools](https://marketplace.visualstudio.com/items?itemName=ms-kubernetes-tools.vscode-kubernetes-tools) extension from the marketplace
 - Kubeconfig to (virtual) garden cluster
 
 ## Install from VSIX
