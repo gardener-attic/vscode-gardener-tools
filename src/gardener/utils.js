@@ -19,13 +19,13 @@
 const vscode = require('vscode')
 const _ = require('lodash')
 
-function configForLandscape(landscapeName) {
+function configForLandscape (landscapeName) {
   const config = vscode.workspace.getConfiguration('vscode-gardener-tools', null)
   const landscapes = _.get(config, 'landscapes')
   return _.find(landscapes, landscape => landscape.name === landscapeName)
 }
 
-function decodeBase64(value) {
+function decodeBase64 (value) {
   if (!value) {
     return
   }

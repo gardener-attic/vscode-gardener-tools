@@ -37,42 +37,30 @@ const nodeType = {
   NODE_TYPE_LANDSCAPE: 'landscape',
   NODE_TYPE_FOLDER: 'folder',
   NODE_TYPE_CLUSTER_TYPE: 'clusterType',
-  NODE_TYPE_ERROR: 'error',
+  NODE_TYPE_ERROR: 'error'
 }
 
 class GardenerTreeProvider {
-  constructor() {
+  constructor () {
     this.collapsibleState = vscode.TreeItemCollapsibleState.Expanded
   }
 
-  getTreeItem(element) {
+  getTreeItem (element) {
     if (element.nodeType === nodeType.NODE_TYPE_ERROR) {
-      return new vscode.TreeItem(
-        element.message,
-        vscode.TreeItemCollapsibleState.None
-      )
+      return new vscode.TreeItem(element.message, vscode.TreeItemCollapsibleState.None)
     } else if (element.nodeType === nodeType.NODE_TYPE_LANDSCAPE) {
-      const treeItem = new vscode.TreeItem(
-        getDisplayName(element),
-        vscode.TreeItemCollapsibleState.Collapsed
-      )
+      const treeItem = new vscode.TreeItem(getDisplayName(element), vscode.TreeItemCollapsibleState.Collapsed)
       treeItem.iconPath = vscode.Uri.file(path.join(__dirname, '../assets/gardener-logo.svg'))
       treeItem.contextValue = `gardener.landscape ${k8s.CloudExplorerV1.SHOW_KUBECONFIG_COMMANDS_CONTEXT}`
       return treeItem
     } else if (element.nodeType === nodeType.NODE_TYPE_PROJECT) {
-      const treeItem = new vscode.TreeItem(
-        getDisplayName(element),
-        vscode.TreeItemCollapsibleState.Collapsed
-      )
+      const treeItem = new vscode.TreeItem(getDisplayName(element), vscode.TreeItemCollapsibleState.Collapsed)
       treeItem.contextValue = 'gardener.project'
       treeItem.tooltip = projectTooltip(element)
       treeItem.command = getLoadResourceCommand(element)
       return treeItem
     } else if (element.nodeType === nodeType.NODE_TYPE_FOLDER) {
-      const treeItem = new vscode.TreeItem(
-        getDisplayName(element),
-        vscode.TreeItemCollapsibleState.Collapsed
-      )
+      const treeItem = new vscode.TreeItem(getDisplayName(element), vscode.TreeItemCollapsibleState.Collapsed)
       const folderIcon = getFolderIcon(element.childType)
       if (folderIcon) {
         treeItem.iconPath = vscode.Uri.file(path.join(__dirname, '../assets/', folderIcon))
@@ -84,10 +72,7 @@ class GardenerTreeProvider {
       if (element.hibernated) {
         label = `${label} (zZz)`
       }
-      const treeItem = new vscode.TreeItem(
-        label,
-        vscode.TreeItemCollapsibleState.None
-      )
+      const treeItem = new vscode.TreeItem(label, vscode.TreeItemCollapsibleState.None)
       const hibernated = element.hibernated ? '.hibernated' : ''
       treeItem.contextValue = `gardener.shoot${hibernated} ${k8s.CloudExplorerV1.SHOW_KUBECONFIG_COMMANDS_CONTEXT}`
       treeItem.command = getLoadResourceCommand(element)
@@ -95,20 +80,14 @@ class GardenerTreeProvider {
       treeItem.tooltip = shootTooltip(element)
       return treeItem
     } else if (element.nodeType === nodeType.NODE_TYPE_PLANT) {
-      const treeItem = new vscode.TreeItem(
-        getDisplayName(element),
-        vscode.TreeItemCollapsibleState.None
-      )
+      const treeItem = new vscode.TreeItem(getDisplayName(element), vscode.TreeItemCollapsibleState.None)
       treeItem.contextValue = `gardener.plant ${k8s.CloudExplorerV1.SHOW_KUBECONFIG_COMMANDS_CONTEXT}`
       treeItem.command = getLoadResourceCommand(element)
       treeItem.iconPath = infraIcon(element.cloudType)
       treeItem.tooltip = plantTooltip(element)
       return treeItem
     } else if (element.nodeType === nodeType.NODE_TYPE_SEED) {
-      const treeItem = new vscode.TreeItem(
-        getDisplayName(element),
-        vscode.TreeItemCollapsibleState.None
-      )
+      const treeItem = new vscode.TreeItem(getDisplayName(element), vscode.TreeItemCollapsibleState.None)
       treeItem.contextValue = `gardener.seed ${k8s.CloudExplorerV1.SHOW_KUBECONFIG_COMMANDS_CONTEXT}`
       treeItem.command = getLoadResourceCommand(element)
       treeItem.iconPath = infraIcon(element.cloudType)
@@ -117,7 +96,7 @@ class GardenerTreeProvider {
     }
   }
 
-  getChildren(element) {
+  getChildren (element) {
     if (!element) {
       return landscapes()
     } else if (element.nodeType === nodeType.NODE_TYPE_LANDSCAPE) {
@@ -140,19 +119,21 @@ class GardenerTreeProvider {
 
 module.exports = { GardenerTreeProvider, nodeType }
 
-function getLoadResourceCommand(element) {
+function getLoadResourceCommand (element) {
   return {
     command: 'vs-gardener.loadResource',
     title: 'Load',
-    arguments: [element]
+    arguments: [
+      element
+    ]
   }
 }
 
-function getDisplayName(element) {
+function getDisplayName (element) {
   return element.displayName || element.name
 }
 
-async function landscapes() {
+async function landscapes () {
   const config = vscode.workspace.getConfiguration('vscode-gardener-tools', null)
   const landscapes = _.get(config, 'landscapes')
   return _.map(landscapes, landscape => {
@@ -161,15 +142,15 @@ async function landscapes() {
   })
 }
 
-function asLandscapeTreeNode(name, kubeconfig) {
+function asLandscapeTreeNode (name, kubeconfig) {
   return {
     nodeType: nodeType.NODE_TYPE_LANDSCAPE,
     name,
-    kubeconfig,
+    kubeconfig
   }
 }
 
-async function clusterScopedResources(landscape) {
+async function clusterScopedResources (landscape) {
   const accessReview = new SelfSubjectAccessReviewClient(landscape.kubeconfig)
   const canIGetSeeds = await accessReview.canI('get', 'seeds')
   const clusterScopedResources = [
@@ -181,7 +162,7 @@ async function clusterScopedResources(landscape) {
   return clusterScopedResources
 }
 
-async function projects({ parent: landscape }) {
+async function projects ({ parent: landscape }) {
   const projectClient = new ProjectClient(landscape.kubeconfig, landscape.name)
   const projects = await projectClient.list()
   return _.map(projects, project => {
@@ -189,7 +170,7 @@ async function projects({ parent: landscape }) {
   })
 }
 
-function toProjectTreeNode(landscape, project) {
+function toProjectTreeNode (landscape, project) {
   const name = _.get(project, 'metadata.name')
   return {
     nodeType: nodeType.NODE_TYPE_PROJECT,
@@ -204,23 +185,23 @@ function toProjectTreeNode(landscape, project) {
   }
 }
 
-function projectTooltip(element) {
+function projectTooltip (element) {
   const list = [
     `Project: ${element.name}`,
     `Owner: ${element.owner}`,
-    `Description: ${element.description}`,
+    `Description: ${element.description}`
   ]
   return list.join('\n')
 }
 
-function clusterTypes(project) {
+function clusterTypes (project) {
   return [
     toFolderTreeNode(project, 'Shoots', nodeType.NODE_TYPE_SHOOT),
     toFolderTreeNode(project, 'Plants', nodeType.NODE_TYPE_PLANT)
   ]
 }
 
-function toFolderTreeNode(parent, name, childType) {
+function toFolderTreeNode (parent, name, childType) {
   return {
     nodeType: nodeType.NODE_TYPE_FOLDER,
     childType,
@@ -229,7 +210,7 @@ function toFolderTreeNode(parent, name, childType) {
   }
 }
 
-async function shoots({ parent: project }) {
+async function shoots ({ parent: project }) {
   const shootClient = new ShootClient(project.landscape.kubeconfig, project.namespace)
   const shoots = await shootClient.list()
   return _.map(shoots, shoot => {
@@ -237,7 +218,7 @@ async function shoots({ parent: project }) {
   })
 }
 
-function toShootTreeNode(project, shoot) {
+function toShootTreeNode (project, shoot) {
   const name = _.get(shoot, 'metadata.name')
   return {
     nodeType: nodeType.NODE_TYPE_SHOOT,
@@ -254,17 +235,17 @@ function toShootTreeNode(project, shoot) {
   }
 }
 
-function shootTooltip(element) {
+function shootTooltip (element) {
   const list = [
     `Shoot: ${element.name}`,
     `Kubernetes Version: ${element.version}`,
     `Created By: ${element.createdBy}`,
-    `Purpose: ${element.purpose}`,
+    `Purpose: ${element.purpose}`
   ]
   return list.join('\n')
 }
 
-async function plants({ parent: project }) {
+async function plants ({ parent: project }) {
   const plant = new PlantClient(project.landscape.kubeconfig, project.namespace)
   const plants = await plant.list()
   return _.map(plants, plant => {
@@ -272,7 +253,7 @@ async function plants({ parent: project }) {
   })
 }
 
-function toPlantTreeNode(project, plant) {
+function toPlantTreeNode (project, plant) {
   const name = _.get(plant, 'metadata.name')
   return {
     nodeType: nodeType.NODE_TYPE_PLANT,
@@ -289,17 +270,17 @@ function toPlantTreeNode(project, plant) {
   }
 }
 
-function plantTooltip(element) {
+function plantTooltip (element) {
   const list = [
     `Plant: ${element.name}`,
     `Cloud: ${element.cloudType}/${element.region}`,
     `Kubernetes Version: ${element.version}`,
-    `Created By: ${element.createdBy}`,
+    `Created By: ${element.createdBy}`
   ]
   return list.join('\n')
 }
 
-async function seeds({ parent: landscape }) {
+async function seeds ({ parent: landscape }) {
   const seedClient = new SeedClient(landscape.kubeconfig)
   const cloudProfilesClient = new CloudProfileClient(landscape.kubeconfig)
   const [
@@ -310,12 +291,15 @@ async function seeds({ parent: landscape }) {
     cloudProfilesClient.list()
   ])
   return _.map(seeds, seed => {
-    const cloudProfile = _.find(cloudProfiles, cloudProfile => cloudProfile.metadata.name === _.get(seed, 'spec.cloud.profile'))
+    const cloudProfile = _.find(
+      cloudProfiles,
+      cloudProfile => cloudProfile.metadata.name === _.get(seed, 'spec.cloud.profile')
+    )
     return toSeedTreeNode(landscape, seed, cloudProfile)
   })
 }
 
-function toSeedTreeNode(landscape, seed, cloudProfile) {
+function toSeedTreeNode (landscape, seed, cloudProfile) {
   const name = _.get(seed, 'metadata.name')
   return {
     nodeType: nodeType.NODE_TYPE_SEED,
@@ -327,11 +311,11 @@ function toSeedTreeNode(landscape, seed, cloudProfile) {
     cloudType: getCloudType(_.get(cloudProfile, 'spec')),
     region: _.get(seed, 'spec.cloud.region', ''),
     visible: _.get(seed, 'spec.visible'),
-    protected: _.get(seed, 'spec.protected'),
+    protected: _.get(seed, 'spec.protected')
   }
 }
 
-function seedTooltip(element) {
+function seedTooltip (element) {
   const list = [
     `Seed: ${element.name}`,
     `Cloud: ${element.cloudType}/${element.region}`,
@@ -341,12 +325,18 @@ function seedTooltip(element) {
   return list.join('\n')
 }
 
-function getCloudType(object) {
-  const cloudTypes = ['aws', 'azure', 'gcp', 'openstack', 'alicloud']
+function getCloudType (object) {
+  const cloudTypes = [
+    'aws',
+    'azure',
+    'gcp',
+    'openstack',
+    'alicloud'
+  ]
   return _.head(_.intersection(_.keys(object), cloudTypes))
 }
 
-function infraIcon(cloudType) {
+function infraIcon (cloudType) {
   const color = iconColor()
   let logo
   switch (cloudType) {
@@ -377,7 +367,7 @@ function infraIcon(cloudType) {
   return vscode.Uri.file(path.join(__dirname, `../assets/${logo}`))
 }
 
-function iconColor() {
+function iconColor () {
   const config = vscode.workspace.getConfiguration('vscode-gardener-tools', null)
   const lightTheme = _.get(config, 'vscode-light-theme', true)
   if (lightTheme) {
@@ -386,7 +376,7 @@ function iconColor() {
   return 'white'
 }
 
-function getFolderIcon(type) {
+function getFolderIcon (type) {
   const color = iconColor()
   switch (type) {
     case nodeType.NODE_TYPE_SHOOT:

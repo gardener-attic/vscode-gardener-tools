@@ -32,7 +32,7 @@ const shelljs = require('shelljs')
 const sysfs = require('fs')
 const _ = require('lodash')
 
-const EXTENSION_CONFIG_KEY = "vs-kubernetes" // TODO use own property config key
+const EXTENSION_CONFIG_KEY = 'vs-kubernetes' // TODO use own property config key
 
 const WINDOWS = 'win32'
 
@@ -40,10 +40,10 @@ const Platform = {
   Windows: 'windows',
   MacOS: 'mac',
   Linux: 'linux',
-  Unsupported: 'unsupported',  // shouldn't happen!
+  Unsupported: 'unsupported' // shouldn't happen!
 }
 
-async function runAsTerminal(context, command, terminalName) {
+async function runAsTerminal (context, command, terminalName) {
   if (await checkPresent(context, CheckPresentMessageMode.Command)) {
     let execPath = await getPath(context.binName)
     const cmd = command
@@ -57,7 +57,7 @@ async function runAsTerminal(context, command, terminalName) {
   }
 }
 
-function createTerminal(name, shellPath, shellArgs) {
+function createTerminal (name, shellPath, shellArgs) {
   const terminalOptions = {
     name: name,
     shellPath: shellPath,
@@ -67,7 +67,7 @@ function createTerminal(name, shellPath, shellArgs) {
   return vscode.window.createTerminal(terminalOptions)
 }
 
-async function checkPresent(context, errorMessageMode) {
+async function checkPresent (context, errorMessageMode) {
   if (context.binFound || context.pathfinder) {
     return true
   }
@@ -75,7 +75,7 @@ async function checkPresent(context, errorMessageMode) {
   return await checkForBinInternal(context, errorMessageMode)
 }
 
-async function checkForBinInternal(context, errorMessageMode) {
+async function checkForBinInternal (context, errorMessageMode) {
   const binName = context.binName
   const bin = getToolPath(binName)
 
@@ -83,10 +83,17 @@ async function checkForBinInternal(context, errorMessageMode) {
   const inferFailedMessage = `Could not find "${binName}" binary.${contextMessage}`
   const configuredFileMissingMessage = `${bin} does not exist! ${contextMessage}`
 
-  return await checkForBinary(context, bin, binName, inferFailedMessage, configuredFileMissingMessage, errorMessageMode !== CheckPresentMessageMode.Silent)
+  return await checkForBinary(
+    context,
+    bin,
+    binName,
+    inferFailedMessage,
+    configuredFileMissingMessage,
+    errorMessageMode !== CheckPresentMessageMode.Silent
+  )
 }
 
-async function checkForBinary(context, bin, binName, inferFailedMessage, configuredFileMissingMessage, alertOnFail) {
+async function checkForBinary (context, bin, binName, inferFailedMessage, configuredFileMissingMessage, alertOnFail) {
   if (!bin) {
     const fb = await findBinary(binName)
 
@@ -106,7 +113,7 @@ async function checkForBinary(context, bin, binName, inferFailedMessage, configu
     context.binFound = sysfs.existsSync(bin)
   } else {
     const sr = await context.shell.exec(`ls ${bin}`)
-    context.binFound = (!!sr && sr.code === 0)
+    context.binFound = !!sr && sr.code === 0
   }
   if (context.binFound) {
     context.binPath = bin
@@ -119,7 +126,7 @@ async function checkForBinary(context, bin, binName, inferFailedMessage, configu
   return context.binFound
 }
 
-async function findBinary(binName) {
+async function findBinary (binName) {
   let cmd = `which ${binName}`
 
   if (isWindows()) {
@@ -142,62 +149,61 @@ async function findBinary(binName) {
   return { err: null, output: execResult.stdout }
 }
 
-function execCore(cmd, opts, stdin) {
-  return new Promise((resolve) => {
+function execCore (cmd, opts, stdin) {
+  return new Promise(resolve => {
     if (getUseWsl()) {
       cmd = 'wsl ' + cmd
     }
-    const proc = shelljs.exec(cmd, opts, (code, stdout, stderr) => resolve({ code: code, stdout: stdout, stderr: stderr }))
+    const proc = shelljs.exec(cmd, opts, (code, stdout, stderr) =>
+      resolve({ code: code, stdout: stdout, stderr: stderr })
+    )
     if (stdin) {
       proc.stdin.end(stdin)
     }
   })
 }
 
-function alertNoBin(binName, failureReason, message, installDependencies) {
+function alertNoBin (binName, failureReason, message, installDependencies) {
   switch (failureReason) {
     case 'inferFailed':
-      showErrorMessage(message, 'Install dependencies', 'Learn more').then(
-        (str) => {
-          switch (str) {
-            case 'Learn more':
-              showInformationMessage(`Add ${binName} directory to path, or set "vs-kubernetes.${binName}-path" config to ${binName} binary.`)
-              break
-            case 'Install dependencies':
-              installDependencies()
-              break
-          }
-
+      showErrorMessage(message, 'Install dependencies', 'Learn more').then(str => {
+        switch (str) {
+          case 'Learn more':
+            showInformationMessage(
+              `Add ${binName} directory to path, or set "vs-kubernetes.${binName}-path" config to ${binName} binary.`
+            )
+            break
+          case 'Install dependencies':
+            installDependencies()
+            break
         }
-      )
+      })
       break
     case 'configuredFileMissing':
-      showErrorMessage(message, 'Install dependencies').then(
-        (str) => {
-          if (str === 'Install dependencies') {
-            installDependencies()
-          }
+      showErrorMessage(message, 'Install dependencies').then(str => {
+        if (str === 'Install dependencies') {
+          installDependencies()
         }
-      )
+      })
       break
   }
 }
 
-function showErrorMessage(message, ...items) {
+function showErrorMessage (message, ...items) {
   return vscode.window.showErrorMessage(message, ...items)
 }
 
-function showInformationMessage(message, ...items) {
+function showInformationMessage (message, ...items) {
   return vscode.window.showInformationMessage(message, ...items)
 }
 
 const CheckPresentMessageMode = {
   Command: 'command',
   Activation: 'activation',
-  Silent: 'silent',
+  Silent: 'silent'
 }
 
-function getCheckContextMessage(errorMessageMode) {
+function getCheckContextMessage (errorMessageMode) {
   if (errorMessageMode === CheckPresentMessageMode.Activation) {
     return ' Kubernetes commands other than configuration will not function correctly.'
   } else if (errorMessageMode === CheckPresentMessageMode.Command) {
@@ -206,10 +212,10 @@ function getCheckContextMessage(errorMessageMode) {
   return ''
 }
 
-function shellEnvironment(baseEnvironment) {
+function shellEnvironment (baseEnvironment) {
   const env = Object.assign({}, baseEnvironment)
   const pathVariable = pathVariableName(env)
-  for (const tool of ['gardenctl']) {
+  for (const tool of [ 'gardenctl' ]) {
     const toolPath = getToolPath(tool)
     if (toolPath) {
       const toolDirectory = path.dirname(toolPath)
@@ -226,83 +232,91 @@ function shellEnvironment(baseEnvironment) {
   return env
 }
 
-function pathEntrySeparator() {
+function pathEntrySeparator () {
   return isWindows() ? '' : ':'
 }
 
-function pathVariableName(env) {
+function pathVariableName (env) {
   if (isWindows()) {
     for (const v of Object.keys(env)) {
-      if (v.toLowerCase() === "path") {
+      if (v.toLowerCase() === 'path') {
         return v
       }
     }
   }
-  return "PATH"
+  return 'PATH'
 }
 
-function isWindows() {
-  return (process.platform === WINDOWS) && !getUseWsl()
+function isWindows () {
+  return process.platform === WINDOWS && !getUseWsl()
 }
 
 // Use WSL on Windows
-const USE_WSL_KEY = "use-wsl"
+const USE_WSL_KEY = 'use-wsl'
 
-function getUseWsl() {
+function getUseWsl () {
   return vscode.workspace.getConfiguration(EXTENSION_CONFIG_KEY)[USE_WSL_KEY]
 }
 
-function getToolPath(tool) {
+function getToolPath (tool) {
   const baseKey = toolPathBaseKey(tool)
   return getPathSetting(baseKey)
 }
 
-function getPathSetting(baseKey) {
+function getPathSetting (baseKey) {
   const os = platform()
   const osOverridePath = getConfiguration(EXTENSION_CONFIG_KEY)[osOverrideKey(os, baseKey)]
   return osOverridePath || getConfiguration(EXTENSION_CONFIG_KEY)[baseKey]
 }
 
-function getConfiguration(key) {
+function getConfiguration (key) {
   return vscode.workspace.getConfiguration(key)
 }
 
-function platform() {
+function platform () {
   if (getUseWsl()) {
     return Platform.Linux
   }
   switch (process.platform) {
-    case 'win32': return Platform.Windows
-    case 'darwin': return Platform.MacOS
-    case 'linux': return Platform.Linux
-    default: return Platform.Unsupported
+    case 'win32':
+      return Platform.Windows
+    case 'darwin':
+      return Platform.MacOS
+    case 'linux':
+      return Platform.Linux
+    default:
+      return Platform.Unsupported
   }
 }
 
-function toolPathBaseKey(tool) {
+function toolPathBaseKey (tool) {
   return `vs-kubernetes.${tool}-path` // TODO use own property
 }
 
-function osOverrideKey(os, baseKey) {
+function osOverrideKey (os, baseKey) {
   const osKey = osKeyString(os)
-  return osKey ? `${baseKey}.${osKey}` : baseKey  // The 'else' clause should never happen so don't worry that this would result in double-checking a missing base key
+  return osKey ? `${baseKey}.${osKey}` : baseKey // The 'else' clause should never happen so don't worry that this would result in double-checking a missing base key
 }
 
-function osKeyString(os) {
+function osKeyString (os) {
   switch (os) {
-    case Platform.Windows: return 'windows'
-    case Platform.MacOS: return 'mac'
-    case Platform.Linux: return 'linux'
-    default: return null
+    case Platform.Windows:
+      return 'windows'
+    case Platform.MacOS:
+      return 'mac'
+    case Platform.Linux:
+      return 'linux'
+    default:
+      return null
   }
 }
 
-async function getPath(binName) {
+async function getPath (binName) {
   const bin = await basePath(binName)
   return execPath(bin)
 }
 
-async function basePath(binName) {
+async function basePath (binName) {
   // if (context.pathfinder) {
   //     return await context.pathfinder()
   // }
@@ -313,7 +327,7 @@ async function basePath(binName) {
   return bin
 }
 
-async function invokeInTerminal(context, command, pipeTo, terminal) {
+async function invokeInTerminal (context, command, pipeTo, terminal) {
   if (await checkPresent(context, CheckPresentMessageMode.Command)) {
     // You might be tempted to think we needed to add 'wsl' here if user is using wsl
     // but this runs in the context of a vanilla terminal, which is controlled by the
@@ -326,7 +340,7 @@ async function invokeInTerminal(context, command, pipeTo, terminal) {
   }
 }
 
-async function invoke(context, command) {
+async function invoke (context, command) {
   return new Promise(async function (resolve, reject) {
     try {
       await toolInternal(context, command, (code, stdout, stderr) => {
@@ -343,7 +357,7 @@ async function invoke(context, command) {
   })
 }
 
-async function toolInternal(context, command, handler) {
+async function toolInternal (context, command, handler) {
   if (await checkPresent(context, CheckPresentMessageMode.Command)) {
     const bin = await basePath(context.binName)
     const cmd = `${bin} ${command}`
@@ -354,7 +368,7 @@ async function toolInternal(context, command, handler) {
   }
 }
 
-function execOpts() {
+function execOpts () {
   let env = process.env
   if (isWindows()) {
     env = Object.assign({}, env, { HOME: home() })
@@ -368,7 +382,7 @@ function execOpts() {
   return opts
 }
 
-async function exec(cmd, stdin) {
+async function exec (cmd, stdin) {
   try {
     return await execCore(cmd, execOpts(), null, stdin)
   } catch (ex) {
@@ -377,37 +391,38 @@ async function exec(cmd, stdin) {
   }
 }
 
-function home() {
+function home () {
   if (getUseWsl()) {
     return shelljs.exec('wsl.exe echo ${HOME}').stdout.trim()
   }
-  return process.env['HOME'] ||
+  return (
+    process.env['HOME'] ||
     concatIfBoth(process.env['HOMEDRIVE'], process.env['HOMEPATH']) ||
     process.env['USERPROFILE'] ||
     ''
+  )
 }
 
-function concatIfBoth(s1, s2) {
+function concatIfBoth (s1, s2) {
   return s1 && s2 ? s1.concat(s2) : undefined
 }
 
-function onDidCloseTerminal(listener) {
+function onDidCloseTerminal (listener) {
   return vscode.window.onDidCloseTerminal(listener)
 }
 
-
-function execPath(basePath) {
+function execPath (basePath) {
   let bin = basePath
-  if (isWindows() && bin && !(bin.endsWith('.exe'))) {
+  if (isWindows() && bin && !bin.endsWith('.exe')) {
     bin = bin + '.exe'
   }
   return bin
 }
 
 class GardenctlImpl {
-  constructor(binFound = false) {
+  constructor (binFound = false) {
     this.context = {
-      installDependenciesCallback: () => { }, // TODO
+      installDependenciesCallback: () => {}, // TODO
       pathfinder: undefined, // TODO
       binFound,
       binPath: 'gardenctl',
@@ -415,29 +430,29 @@ class GardenctlImpl {
     }
   }
 
-  checkPresent(errorMessageMode) {
+  checkPresent (errorMessageMode) {
     return checkPresent(this.context, errorMessageMode)
   }
-  async invoke(command) {
+  async invoke (command) {
     return invoke(this.context, command)
   }
-  async invokeInNewTerminal(command, terminalName, onClose, pipeTo) {
+  async invokeInNewTerminal (command, terminalName, onClose, pipeTo) {
     const terminal = createTerminal(terminalName)
-    const disposable = onClose ? onDidCloseTerminal(onClose) : new vscode.Disposable(() => { })
+    const disposable = onClose ? onDidCloseTerminal(onClose) : new vscode.Disposable(() => {})
     await invokeInTerminal(this.context, command, pipeTo, terminal)
     return disposable
   }
-  invokeInSharedTerminal(command) {
+  invokeInSharedTerminal (command) {
     const terminal = this.getSharedTerminal()
     return invokeInTerminal(this.context, command, undefined, terminal)
   }
-  runAsTerminal(command, terminalName) {
+  runAsTerminal (command, terminalName) {
     return runAsTerminal(this.context, command, terminalName)
   }
-  getSharedTerminal() {
+  getSharedTerminal () {
     if (!this.sharedTerminal) {
       this.sharedTerminal = createTerminal('gardenctl')
-      const disposable = onDidCloseTerminal((terminal) => {
+      const disposable = onDidCloseTerminal(terminal => {
         if (terminal === this.sharedTerminal) {
           this.sharedTerminal = null
           disposable.dispose()
