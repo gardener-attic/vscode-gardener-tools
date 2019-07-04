@@ -20,6 +20,7 @@ This vs-code extension allows you to work with your gardener projects, shoots, p
 
 ## Requirements
 - You have installed the [Kubernetes Tools](https://marketplace.visualstudio.com/items?itemName=ms-kubernetes-tools.vscode-kubernetes-tools) extension from the marketplace
+- [Gardenctl](https://github.com/gardener/gardenctl#installation) for `Shell` or `Target` command
 - Kubeconfig to (virtual) garden cluster
 
 ## Install from VSIX
@@ -35,6 +36,7 @@ This extension contributes the following settings:
 * `vscode-gardener-tools.vscode-light-theme`: should match your configured theme style. Default: true
 * `vscode-gardener-tools.landscapes`: Required configuration for garden landscapes
 * `vscode-gardener-tools.landscapes[].name`: Name of the garden cluster
+* `vscode-gardener-tools.landscapes[].gardenName`: Optional name of the corresponding (gardenctl) garden. Default: Name of the landscape
 * `vscode-gardener-tools.landscapes[].kubeconfigPath`: Path to the kubeconfig of the garden cluster
 * `vscode-gardener-tools.landscapes[].dashboardUrl`: Gardener dashboard URL,
 * `vscode-gardener-tools.landscapes[].projects`: Optional list of projects (names) to be shown. However, you should specify this list if you do not have operator rights on the garden cluster or if you want to see only those projects.
@@ -46,12 +48,13 @@ Example config settings.json:
       "landscapes": [
         {
           "name": "landscape-dev",
+          "gardenName": "virtual-dev",
           "kubeconfigPath": "/kubeconfigpath/cluster-dev-virtual-garden/kubeconfig.yaml",
           "dashboardUrl": "https://dashboard.garden.dev.example.com",
           "projects": ["garden", "myproject"]
         },
         {
-          "name": "landscape-peter",
+          "name": "landscape-canary",
           "kubeconfigPath": "/kubeconfigpath/cluster-canary-virtual-garden/kubeconfig.yaml",
           "dashboardUrl": "https://dashboard.garden.canary.example.com"
         },
