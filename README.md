@@ -1,6 +1,6 @@
 # Gardener Tools for VSCode
 
-This vs-code extension allows you to work with your gardener projects, shoots, plants and seeds.
+This `Visual Studio Code Kubernetes Tools` extension allows you to work with your gardener projects, shoots, plants and seeds.
 
 <img src="https://user-images.githubusercontent.com/5526658/60663851-a8f22000-9e60-11e9-99e0-11a6a4313fb4.png" alt="VScode Gardener Tools Screenshot" width="600"/>
 
