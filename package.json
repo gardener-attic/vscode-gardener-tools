@@ -168,7 +168,7 @@
     "vscode": "^1.1.28"
   },
   "dependencies": {
-    "lodash": "^4.17.11",
+    "lodash": "^4.17.14",
     "shell-escape": "^0.2.0",
     "shelljs-exec-proxy": "^0.1.1",
     "tmp": "^0.1.0",
