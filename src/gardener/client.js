@@ -112,6 +112,12 @@ class PlantClient extends Client {
   }
 }
 
+class BackupInfraClient extends Client {
+  constructor (kubeconfig, namespace) {
+    super(kubeconfig, namespace, 'backupinfrastructures')
+  }
+}
+
 class SeedClient extends Client {
   constructor (kubeconfig) {
     const namespace = undefined // CloudProfile is a cluster scoped resource
@@ -159,6 +165,7 @@ module.exports = {
   ProjectClient,
   ShootClient,
   PlantClient,
+  BackupInfraClient,
   SeedClient,
   SecretClient,
   CloudProfileClient,
