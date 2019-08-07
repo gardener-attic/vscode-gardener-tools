@@ -204,11 +204,12 @@ function projectTooltip (element) {
   return list.join('\n')
 }
 
-function projectResources (project) {
+async function projectResources (project) {
   const resources = [
     toFolderTreeNode(project, 'Shoots', nodeType.NODE_TYPE_SHOOT),
     toFolderTreeNode(project, 'Plants', nodeType.NODE_TYPE_PLANT)
   ]
+  const accessReview = new SelfSubjectAccessReviewClient(project.landscape.kubeconfig)
   const canIGetBackupInfras = await accessReview.canI('get', 'backupinfrastructures')
   if (canIGetBackupInfras) {
     resources.push(toFolderTreeNode(project, 'BackupInfrastructures', nodeType.NODE_TYPE_BACKUPINFRA))
