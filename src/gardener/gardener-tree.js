@@ -24,6 +24,7 @@ const {
   ProjectClient,
   ShootClient,
   PlantClient,
+  BackupInfraClient,
   SeedClient,
   CloudProfileClient,
   SelfSubjectAccessReviewClient
@@ -36,8 +37,9 @@ const nodeType = {
   NODE_TYPE_PROJECT: 'project',
   NODE_TYPE_LANDSCAPE: 'landscape',
   NODE_TYPE_FOLDER: 'folder',
-  NODE_TYPE_CLUSTER_TYPE: 'clusterType',
-  NODE_TYPE_ERROR: 'error'
+  NODE_TYPE_PROJECT_RESOURCE: 'projectresource',
+  NODE_TYPE_ERROR: 'error',
+  NODE_TYPE_BACKUPINFRA: 'backupinfrastructure'
 }
 
 class GardenerTreeProvider {
@@ -93,6 +95,12 @@ class GardenerTreeProvider {
       treeItem.iconPath = infraIcon(element.cloudType)
       treeItem.tooltip = seedTooltip(element)
       return treeItem
+    } else if (element.nodeType === nodeType.NODE_TYPE_BACKUPINFRA) {
+      const treeItem = new vscode.TreeItem(getDisplayName(element), vscode.TreeItemCollapsibleState.None)
+      treeItem.contextValue = `gardener.backupinfrastructure`
+      treeItem.command = getLoadResourceCommand(element)
+      treeItem.tooltip = backupInfraTooltip(element)
+      return treeItem
     }
   }
 
@@ -103,12 +111,14 @@ class GardenerTreeProvider {
       return clusterScopedResources(element)
     } else if (element.childType === nodeType.NODE_TYPE_PROJECT) {
       return projects(element)
-    } else if (element.childType === nodeType.NODE_TYPE_CLUSTER_TYPE) {
-      return clusterTypes(element)
+    } else if (element.childType === nodeType.NODE_TYPE_PROJECT_RESOURCE) {
+      return projectResources(element)
     } else if (element.childType === nodeType.NODE_TYPE_SHOOT) {
       return shoots(element)
     } else if (element.childType === nodeType.NODE_TYPE_PLANT) {
       return plants(element)
+    } else if (element.childType === nodeType.NODE_TYPE_BACKUPINFRA) {
+      return backupinfras(element)
     } else if (element.childType === nodeType.NODE_TYPE_SEED) {
       return seeds(element)
     } else {
@@ -174,7 +184,7 @@ function toProjectTreeNode (landscape, project) {
   const name = _.get(project, 'metadata.name')
   return {
     nodeType: nodeType.NODE_TYPE_PROJECT,
-    childType: nodeType.NODE_TYPE_CLUSTER_TYPE,
+    childType: nodeType.NODE_TYPE_PROJECT_RESOURCE,
     kindPlural: 'projects',
     name,
     landscape,
@@ -194,11 +204,17 @@ function projectTooltip (element) {
   return list.join('\n')
 }
 
-function clusterTypes (project) {
-  return [
+async function projectResources (project) {
+  const resources = [
     toFolderTreeNode(project, 'Shoots', nodeType.NODE_TYPE_SHOOT),
     toFolderTreeNode(project, 'Plants', nodeType.NODE_TYPE_PLANT)
   ]
+  const accessReview = new SelfSubjectAccessReviewClient(project.landscape.kubeconfig)
+  const canIGetBackupInfras = await accessReview.canI('get', 'backupinfrastructures')
+  if (canIGetBackupInfras) {
+    resources.push(toFolderTreeNode(project, 'BackupInfrastructures', nodeType.NODE_TYPE_BACKUPINFRA))
+  }
+  return resources
 }
 
 function toFolderTreeNode (parent, name, childType) {
@@ -276,6 +292,37 @@ function plantTooltip (element) {
     `Cloud: ${element.cloudType}/${element.region}`,
     `Kubernetes Version: ${element.version}`,
     `Created By: ${element.createdBy}`
+  ]
+  return list.join('\n')
+}
+
+async function backupinfras ({ parent: project }) {
+  const backupInfra = new BackupInfraClient(project.landscape.kubeconfig, project.namespace)
+  const backupInfras = await backupInfra.list()
+  return _.map(backupInfras, backupInfra => {
+    return toBackupInfraTreeNode(project, backupInfra)
+  })
+}
+
+function toBackupInfraTreeNode (project, backupInfra) {
+  const name = _.get(backupInfra, 'metadata.name')
+  return {
+    nodeType: nodeType.NODE_TYPE_BACKUPINFRA,
+    kindPlural: 'backupinfrastructures',
+    name,
+    project,
+    seed: _.get(backupInfra, 'spec.seed'),
+    forceDeletionEnabled: _.get(backupInfra, ['metadata', 'annotations', 'backupinfrastructure.garden.sapcloud.io/force-deletion'], "false"),
+    shootUID: _.get(backupInfra, 'spec.shootUID'),
+  }
+}
+
+function backupInfraTooltip (element) {
+  const list = [
+    `BackupInfra: ${element.name}`,
+    `Seed: ${element.seed}`,
+    `Shoot UID: ${element.shootUID}`,
+    `Force Deletion Enabled: ${element.forceDeletionEnabled}`
   ]
   return list.join('\n')
 }
@@ -387,6 +434,8 @@ function getFolderIcon (type) {
       return `seed-${color}.svg`
     case nodeType.NODE_TYPE_PROJECT:
       return `project-${color}.svg`
+    case nodeType.NODE_TYPE_BACKUPINFRA:
+      return `backup-${color}.svg`
     default:
       return undefined
   }
