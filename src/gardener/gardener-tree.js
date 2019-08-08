@@ -24,6 +24,8 @@ const {
   ProjectClient,
   ShootClient,
   PlantClient,
+  BackupBucketClient,
+  BackupEntryClient,
   BackupInfraClient,
   SeedClient,
   CloudProfileClient,
@@ -39,7 +41,9 @@ const nodeType = {
   NODE_TYPE_FOLDER: 'folder',
   NODE_TYPE_PROJECT_RESOURCE: 'projectresource',
   NODE_TYPE_ERROR: 'error',
-  NODE_TYPE_BACKUPINFRA: 'backupinfrastructure'
+  NODE_TYPE_BACKUP_BUCKET: 'backupbucket',
+  NODE_TYPE_BACKUP_ENTRY: 'backupentry',
+  NODE_TYPE_BACKUP_INFRA: 'backupinfrastructure'
 }
 
 class GardenerTreeProvider {
@@ -95,7 +99,21 @@ class GardenerTreeProvider {
       treeItem.iconPath = infraIcon(element.cloudType)
       treeItem.tooltip = seedTooltip(element)
       return treeItem
-    } else if (element.nodeType === nodeType.NODE_TYPE_BACKUPINFRA) {
+    } else if (element.nodeType === nodeType.NODE_TYPE_BACKUP_BUCKET) {
+      const treeItem = new vscode.TreeItem(getDisplayName(element), vscode.TreeItemCollapsibleState.None)
+      treeItem.contextValue = `gardener.backupbucket`
+      treeItem.command = getLoadResourceCommand(element)
+      treeItem.iconPath = infraIcon(element.cloudType)
+      treeItem.tooltip = backupBucketTooltip(element)
+      return treeItem
+    } else if (element.nodeType === nodeType.NODE_TYPE_BACKUP_ENTRY) {
+      const treeItem = new vscode.TreeItem(getDisplayName(element), vscode.TreeItemCollapsibleState.None)
+      treeItem.contextValue = `gardener.backupentry`
+      treeItem.command = getLoadResourceCommand(element)
+      treeItem.iconPath = infraIcon(element.cloudType)
+      treeItem.tooltip = backupEntryTooltip(element)
+      return treeItem
+    } else if (element.nodeType === nodeType.NODE_TYPE_BACKUP_INFRA) {
       const treeItem = new vscode.TreeItem(getDisplayName(element), vscode.TreeItemCollapsibleState.None)
       treeItem.contextValue = `gardener.backupinfrastructure`
       treeItem.command = getLoadResourceCommand(element)
@@ -117,7 +135,11 @@ class GardenerTreeProvider {
       return shoots(element)
     } else if (element.childType === nodeType.NODE_TYPE_PLANT) {
       return plants(element)
-    } else if (element.childType === nodeType.NODE_TYPE_BACKUPINFRA) {
+    } else if (element.childType === nodeType.NODE_TYPE_BACKUP_BUCKET) {
+      return backupBuckets(element)
+    } else if (element.childType === nodeType.NODE_TYPE_BACKUP_ENTRY) {
+      return backupEntries(element)
+    } else if (element.childType === nodeType.NODE_TYPE_BACKUP_INFRA) {
       return backupinfras(element)
     } else if (element.childType === nodeType.NODE_TYPE_SEED) {
       return seeds(element)
@@ -169,6 +191,10 @@ async function clusterScopedResources (landscape) {
   if (canIGetSeeds) {
     clusterScopedResources.push(toFolderTreeNode(landscape, 'Seeds', nodeType.NODE_TYPE_SEED))
   }
+  const canIGetBackupBuckets = await accessReview.canI('get', 'backupbuckets')
+  if (canIGetBackupBuckets) {
+    clusterScopedResources.push(toFolderTreeNode(landscape, 'BackupBuckets', nodeType.NODE_TYPE_BACKUP_BUCKET))
+  }
   return clusterScopedResources
 }
 
@@ -210,9 +236,13 @@ async function projectResources (project) {
     toFolderTreeNode(project, 'Plants', nodeType.NODE_TYPE_PLANT)
   ]
   const accessReview = new SelfSubjectAccessReviewClient(project.landscape.kubeconfig)
+  const canIGetBackupEntries = await accessReview.canI('get', 'backupentries')
+  if (canIGetBackupEntries) {
+    resources.push(toFolderTreeNode(project, 'BackupEntries', nodeType.NODE_TYPE_BACKUP_ENTRY))
+  }
   const canIGetBackupInfras = await accessReview.canI('get', 'backupinfrastructures')
   if (canIGetBackupInfras) {
-    resources.push(toFolderTreeNode(project, 'BackupInfrastructures', nodeType.NODE_TYPE_BACKUPINFRA))
+    resources.push(toFolderTreeNode(project, 'BackupInfrastructures', nodeType.NODE_TYPE_BACKUP_INFRA))
   }
   return resources
 }
@@ -296,6 +326,78 @@ function plantTooltip (element) {
   return list.join('\n')
 }
 
+async function backupBuckets ({ parent: landscape }) {
+  const backupBucket = new BackupBucketClient(landscape.kubeconfig)
+  const backupBuckets = await backupBucket.list()
+  return _.map(backupBuckets, backupBucket => {
+    return toBackupBucketTreeNode(landscape, backupBucket)
+  })
+}
+
+function toBackupBucketTreeNode (landscape, backupBucket) {
+  const name = _.get(backupBucket, 'metadata.name')
+  return {
+    nodeType: nodeType.NODE_TYPE_BACKUP_BUCKET,
+    kindPlural: 'backupbuckets',
+    name,
+    landscape,
+    seed: _.get(backupBucket, 'spec.seed'),
+    region: _.get(backupBucket, 'spec.region'),
+    cloudType: _.get(backupBucket, 'spec.provider'),
+  }
+}
+
+function backupBucketTooltip (element) {
+  const list = [
+    `BackupBucket: ${element.name}`,
+    `Seed: ${element.seed}`,
+    `Region: ${element.region}`,
+    `Provider: ${element.cloudType}`
+  ]
+  return list.join('\n')
+}
+
+async function backupEntries ({ parent: project }) {
+  const backupEntryClient = new BackupEntryClient(project.landscape.kubeconfig, project.namespace)
+  const backupBucketsClient = new BackupBucketClient(project.landscape.kubeconfig)
+  const [
+    backupEntries,
+    backupBuckets
+  ] = await Promise.all([
+    backupEntryClient.list(),
+    backupBucketsClient.list()
+  ])
+  return _.map(backupEntries, backupEntry => {
+    const backupBucket = _.find(
+      backupBuckets,
+      backupBucket => backupBucket.metadata.name === _.get(backupEntry, 'spec.bucketName')
+    )
+    return toBackupEntryTreeNode(project, backupEntry, backupBucket)
+  })
+}
+
+function toBackupEntryTreeNode (project, backupEntry, backupBucket) {
+  const name = _.get(backupEntry, 'metadata.name')
+  return {
+    nodeType: nodeType.NODE_TYPE_BACKUP_ENTRY,
+    kindPlural: 'backupentries',
+    name,
+    project,
+    bucket: _.get(backupEntry, 'spec.bucketName'),
+    seed: _.get(backupEntry, 'spec.seed'),
+    cloudType: _.get(backupBucket, 'spec.provider'),
+  }
+}
+
+function backupEntryTooltip (element) {
+  const list = [
+    `BackupEntry: ${element.name}`,
+    `Seed: ${element.seed}`,
+    `Bucket: ${element.bucket}`,
+  ]
+  return list.join('\n')
+}
+
 async function backupinfras ({ parent: project }) {
   const backupInfra = new BackupInfraClient(project.landscape.kubeconfig, project.namespace)
   const backupInfras = await backupInfra.list()
@@ -307,7 +409,7 @@ async function backupinfras ({ parent: project }) {
 function toBackupInfraTreeNode (project, backupInfra) {
   const name = _.get(backupInfra, 'metadata.name')
   return {
-    nodeType: nodeType.NODE_TYPE_BACKUPINFRA,
+    nodeType: nodeType.NODE_TYPE_BACKUP_INFRA,
     kindPlural: 'backupinfrastructures',
     name,
     project,
@@ -434,7 +536,11 @@ function getFolderIcon (type) {
       return `seed-${color}.svg`
     case nodeType.NODE_TYPE_PROJECT:
       return `project-${color}.svg`
-    case nodeType.NODE_TYPE_BACKUPINFRA:
+    case nodeType.NODE_TYPE_BACKUP_BUCKET:
+      return `backup-${color}.svg`
+    case nodeType.NODE_TYPE_BACKUP_ENTRY:
+        return `backup-${color}.svg`
+    case nodeType.NODE_TYPE_BACKUP_INFRA:
       return `backup-${color}.svg`
     default:
       return undefined

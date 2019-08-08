@@ -112,6 +112,18 @@ class PlantClient extends Client {
   }
 }
 
+
+class BackupBucketClient extends Client {
+  constructor (kubeconfig) {
+    const namespace = undefined // BackupBucket is a cluster scoped resource
+    super(kubeconfig, namespace, 'backupbuckets')
+  }
+}
+class BackupEntryClient extends Client {
+  constructor (kubeconfig, namespace) {
+    super(kubeconfig, namespace, 'backupentries')
+  }
+}
 class BackupInfraClient extends Client {
   constructor (kubeconfig, namespace) {
     super(kubeconfig, namespace, 'backupinfrastructures')
@@ -165,6 +177,8 @@ module.exports = {
   ProjectClient,
   ShootClient,
   PlantClient,
+  BackupBucketClient,
+  BackupEntryClient,
   BackupInfraClient,
   SeedClient,
   SecretClient,
