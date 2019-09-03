@@ -342,8 +342,8 @@ function toBackupBucketTreeNode (landscape, backupBucket) {
     name,
     landscape,
     seed: _.get(backupBucket, 'spec.seed'),
-    region: _.get(backupBucket, 'spec.region'),
-    cloudType: _.get(backupBucket, 'spec.provider'),
+    region: _.get(backupBucket, 'spec.provider.region'),
+    cloudType: _.get(backupBucket, 'spec.provider.type'),
   }
 }
 
@@ -385,7 +385,7 @@ function toBackupEntryTreeNode (project, backupEntry, backupBucket) {
     project,
     bucket: _.get(backupEntry, 'spec.bucketName'),
     seed: _.get(backupEntry, 'spec.seed'),
-    cloudType: _.get(backupBucket, 'spec.provider'),
+    cloudType: _.get(backupBucket, 'spec.provider.type'),
   }
 }
 
