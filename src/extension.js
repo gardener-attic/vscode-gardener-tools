@@ -372,7 +372,7 @@ function createShoot(commandTarget) {
 
   const namespace = _.get(folderNode, 'parent.namespace')
 
-  const uri = urljoin(dashboardUrl, '/namespace/', namespace, '/shoots/create/ui')
+  const uri = urljoin(dashboardUrl, '/namespace/', namespace, '/shoots/+')
   vscode.env.openExternal(vscode.Uri.parse(uri, true))
 }
 
@@ -385,7 +385,7 @@ function createProject(commandTarget) {
     return
   }
 
-  const uri = urljoin(dashboardUrl, '/namespace/create/ui')
+  const uri = urljoin(dashboardUrl, '/namespace/+')
   vscode.env.openExternal(vscode.Uri.parse(uri, true))
 }
 
