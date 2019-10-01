@@ -1,6 +1,6 @@
 # Gardener Tools for VSCode
 
-<img src="https://user-images.githubusercontent.com/5526658/65957954-7bf8dd80-e44e-11e9-9ca5-0d419a7c2716.png"/>
+<img src="https://user-images.githubusercontent.com/5526658/65957954-7bf8dd80-e44e-11e9-9ca5-0d419a7c2716.png" width="180"/>
 
 This `Visual Studio Code Kubernetes Tools` extension allows you to work with your gardener projects, shoots, plants and seeds.
 
