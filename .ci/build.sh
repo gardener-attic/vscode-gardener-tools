@@ -6,6 +6,8 @@ else
   OUT_PATH="$(readlink -f $OUT_PATH)"
 fi
 
+./prepare_release
+
 pushd "${MAIN_REPO_DIR}"
 
 apk add npm
