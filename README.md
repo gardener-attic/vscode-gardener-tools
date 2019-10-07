@@ -28,7 +28,10 @@ This `Visual Studio Code Kubernetes Tools` extension allows you to work with you
 - Kubeconfig to (virtual) garden cluster
 - For gardener operators: [Gardenctl](https://github.com/gardener/gardenctl#installation) for `Shell` or `Target` command
 
-## Install from VSIX
+## Install
+[Open this extension in the Visual Studio Marketplace](https://marketplace.visualstudio.com/items?itemName=gardener.vscode-gardener-tools)
+
+### Install from VSIX
 
 * Download .vsix file from latest [release](https://github.com/gardener/vscode-gardener-tools/releases) asset
 * In VSCode, open the [command palette](https://code.visualstudio.com/docs/getstarted/tips-and-tricks#_command-palette): `View` -> `Command Palette...` -> type in `Extensions: Install from VSIX...`
