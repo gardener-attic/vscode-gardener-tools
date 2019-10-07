@@ -1,7 +1,7 @@
 {
   "name": "vscode-gardener-tools",
   "displayName": "Gardener Kubernetes Service",
-  "publisher": "sap-kubernetes-tools",
+  "publisher": "gardener",
   "repository": {
     "type": "git",
     "url": "https://github.com/gardener/vscode-gardener-tools"
