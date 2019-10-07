@@ -158,5 +158,6 @@
     "tmp": "^0.1.0",
     "url-join": "^4.0.0",
     "vscode-kubernetes-tools-api": "^1.0.0"
-  }
+  },
+  "icon": "src/assets/gardener-logo-256.png"
 }
