@@ -45,7 +45,8 @@ const {
   KubernetesResourceVirtualFileSystemProvider
 } = require('./gardener/virtualfs')
 const {
-  GardenctlImpl
+  GardenctlImpl,
+  CheckPresentMessageMode
 } = require('./gardener/vscodeUtils')
 
 // this method is called when your extension is activated
@@ -87,6 +88,8 @@ async function activate(context) {
 
     context.subscriptions.push(...subscriptions)
     gardenctlInst = new GardenctlImpl()
+    const isGardenCtlPresent = await gardenctlInst.checkPresent(CheckPresentMessageMode.Silent)
+    explorer.setIsGardenCtlPresent(isGardenCtlPresent)
   } else {
     vscode.window.showWarningMessage(clusterExplorerAPI.reason)
   }

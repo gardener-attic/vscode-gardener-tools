@@ -51,17 +51,29 @@ class GardenerTreeProvider {
     this.collapsibleState = vscode.TreeItemCollapsibleState.Expanded
   }
 
+  setIsGardenCtlPresent(value) {
+    this.isGardenCtlPresent = value
+  }
+
+  targetableContextValue() {
+    return this.isGardenCtlPresent ? ' gardener.targetable' : ''
+  }
+
+  shellableContextValue(hibernated) {
+    return this.isGardenCtlPresent && !hibernated ? ' gardener.shellable' : ''
+  }
+
   getTreeItem (element) {
     if (element.nodeType === nodeType.NODE_TYPE_ERROR) {
       return new vscode.TreeItem(element.message, vscode.TreeItemCollapsibleState.None)
     } else if (element.nodeType === nodeType.NODE_TYPE_LANDSCAPE) {
       const treeItem = new vscode.TreeItem(getDisplayName(element), vscode.TreeItemCollapsibleState.Collapsed)
       treeItem.iconPath = vscode.Uri.file(path.join(__dirname, '../assets/gardener-logo.svg'))
-      treeItem.contextValue = `gardener.landscape ${k8s.CloudExplorerV1.SHOW_KUBECONFIG_COMMANDS_CONTEXT}`
+      treeItem.contextValue = `gardener.landscape` + this.targetableContextValue() + ` ${k8s.CloudExplorerV1.SHOW_KUBECONFIG_COMMANDS_CONTEXT}`
       return treeItem
     } else if (element.nodeType === nodeType.NODE_TYPE_PROJECT) {
       const treeItem = new vscode.TreeItem(getDisplayName(element), vscode.TreeItemCollapsibleState.Collapsed)
-      treeItem.contextValue = 'gardener.project'
+      treeItem.contextValue = 'gardener.project' + this.targetableContextValue()
       treeItem.tooltip = projectTooltip(element)
       treeItem.command = getLoadResourceCommand(element)
       return treeItem
@@ -80,7 +92,7 @@ class GardenerTreeProvider {
       }
       const treeItem = new vscode.TreeItem(label, vscode.TreeItemCollapsibleState.None)
       const hibernated = element.hibernated ? '.hibernated' : ''
-      treeItem.contextValue = `gardener.shoot${hibernated} ${k8s.CloudExplorerV1.SHOW_KUBECONFIG_COMMANDS_CONTEXT}`
+      treeItem.contextValue = `gardener.shoot${hibernated}` + this.targetableContextValue() + this.shellableContextValue(element.hibernated) + ` ${k8s.CloudExplorerV1.SHOW_KUBECONFIG_COMMANDS_CONTEXT}`
       treeItem.command = getLoadResourceCommand(element)
       treeItem.iconPath = infraIcon(element.cloudType)
       treeItem.tooltip = shootTooltip(element)
@@ -94,7 +106,7 @@ class GardenerTreeProvider {
       return treeItem
     } else if (element.nodeType === nodeType.NODE_TYPE_SEED) {
       const treeItem = new vscode.TreeItem(getDisplayName(element), vscode.TreeItemCollapsibleState.None)
-      treeItem.contextValue = `gardener.seed ${k8s.CloudExplorerV1.SHOW_KUBECONFIG_COMMANDS_CONTEXT}`
+      treeItem.contextValue = `gardener.seed` + this.targetableContextValue() + this.shellableContextValue(false) + `${k8s.CloudExplorerV1.SHOW_KUBECONFIG_COMMANDS_CONTEXT}`
       treeItem.command = getLoadResourceCommand(element)
       treeItem.iconPath = infraIcon(element.cloudType)
       treeItem.tooltip = seedTooltip(element)

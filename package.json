@@ -130,27 +130,11 @@
         },
         {
           "command": "vs-gardener.target",
-          "when": "viewItem =~ /gardener\\.landscape/i"
-        },
-        {
-          "command": "vs-gardener.target",
-          "when": "viewItem =~ /gardener\\.project/i"
-        },
-        {
-          "command": "vs-gardener.target",
-          "when": "viewItem =~ /gardener\\.shoot/i"
-        },
-        {
-          "command": "vs-gardener.target",
-          "when": "viewItem =~ /gardener\\.seed/i"
+          "when": "viewItem =~ /gardener\\.targetable/i"
         },
         {
           "command": "vs-gardener.shell",
-          "when": "viewItem =~ /gardener\\.shoot(?!\\.hibernated)/i"
-        },
-        {
-          "command": "vs-gardener.shell",
-          "when": "viewItem =~ /gardener\\.seed/i"
+          "when": "viewItem =~ /gardener\\.shellable/i"
         }
       ]
     }

@@ -25,8 +25,8 @@ This `Visual Studio Code Kubernetes Tools` extension allows you to work with you
 
 ## Requirements
 - You have installed the [Kubernetes Tools](https://marketplace.visualstudio.com/items?itemName=ms-kubernetes-tools.vscode-kubernetes-tools) extension from the marketplace
-- [Gardenctl](https://github.com/gardener/gardenctl#installation) for `Shell` or `Target` command
 - Kubeconfig to (virtual) garden cluster
+- For gardener operators: [Gardenctl](https://github.com/gardener/gardenctl#installation) for `Shell` or `Target` command
 
 ## Install from VSIX
 

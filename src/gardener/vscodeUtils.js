@@ -67,12 +67,12 @@ function createTerminal (name, shellPath, shellArgs) {
   return vscode.window.createTerminal(terminalOptions)
 }
 
-async function checkPresent (context, errorMessageMode) {
+function checkPresent (context, errorMessageMode) {
   if (context.binFound || context.pathfinder) {
     return true
   }
 
-  return await checkForBinInternal(context, errorMessageMode)
+  return checkForBinInternal(context, errorMessageMode)
 }
 
 async function checkForBinInternal (context, errorMessageMode) {
@@ -135,7 +135,9 @@ async function findBinary (binName) {
   }
 
   const execResult = getShell()[which](binName)
-  if (execResult.code) {
+  if (!execResult) {
+    return { err: 1, output: `${binName} not found` }
+  } else if (execResult.code) {
     return { err: execResult.code, output: execResult.stderr }
   }
 
@@ -410,5 +412,6 @@ class GardenctlImpl {
 }
 
 module.exports = {
-  GardenctlImpl
+  GardenctlImpl,
+  CheckPresentMessageMode
 }
