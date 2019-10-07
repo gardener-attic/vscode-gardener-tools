@@ -6,7 +6,7 @@ else
   OUT_PATH="$(readlink -f $OUT_PATH)"
 fi
 
-./prepare_release
+${MAIN_REPO_DIR}/.ci/prepare_release
 
 pushd "${MAIN_REPO_DIR}"
 
