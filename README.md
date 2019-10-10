@@ -47,9 +47,10 @@ This extension contributes the following settings:
 * `vscode-gardener-tools.landscapes`: Required configuration for garden landscapes
 * `vscode-gardener-tools.landscapes[].name`: Name of the garden cluster
 * `vscode-gardener-tools.landscapes[].gardenName`: Optional name of the corresponding (gardenctl) garden. Default: Name of the landscape
-* `vscode-gardener-tools.landscapes[].kubeconfigPath`: Path to the kubeconfig of the garden cluster
+* `vscode-gardener-tools.landscapes[].kubeconfigPath`: Path to the kubeconfig of the garden cluster.
+  * How to get the kubeconfig as regular project member: In the gardener dashboard, go to the `Members` section of your project and create a new service account. Afterwards you can download the kubeconfig of the service account.
 * `vscode-gardener-tools.landscapes[].dashboardUrl`: Gardener dashboard URL,
-* `vscode-gardener-tools.landscapes[].projects`: Optional list of projects (names) to be shown. However, you should specify this list if you do not have operator rights on the garden cluster or if you want to see only those projects.
+* `vscode-gardener-tools.landscapes[].projects[]`: Optional list of projects (names) to be shown. However, you should specify this list if you do not have operator rights on the garden cluster or if you want to see only those projects.
 
 Example config settings.json:
 ```js
@@ -77,3 +78,11 @@ To change the `Gardener Kubernetes Tools` settings:
 * On macOS - `Code` > `Preferences` > `Settings`
 
 Then search for `Gardener Kubernetes Tools` or navigate to `User Settings` > `Extensions` > `Gardener Kubernetes Tools`
+
+## Known Issues
+### No Projects are Listed
+No projects are listed and you also see the entry `No permission to list projects. Specify the projects in the extension configuration.`
+
+**Reason**: Most likely you have downloaded the kubeconfig of a service account in the `Members` section of your project in the gardener dashboard. This account does not have the permission to list projects.
+
+**Solution**: Specify the list of projects that you want to see (and have access to) by setting the `projects` property of your landscape in the **Extension Settings**.
