@@ -29,7 +29,9 @@ This `Visual Studio Code Kubernetes Tools` extension allows you to work with you
 - For gardener operators: [Gardenctl](https://github.com/gardener/gardenctl#installation) for `Shell` or `Target` command
 
 ## Install
-[Open this extension in the Visual Studio Marketplace](https://marketplace.visualstudio.com/items?itemName=gardener.vscode-gardener-tools)
+1. [Install this extension from the Visual Studio Marketplace](https://marketplace.visualstudio.com/items?itemName=gardener.vscode-gardener-tools)
+2. Configure the extension. See **Extension Settings** section below.
+3. In the `Sidebar`, click on the Kubernetes icon. There should be an entry `Gardener` under the `Clouds` section.
 
 ### Install from VSIX
 
