@@ -39,11 +39,12 @@ const nodeType = {
   NODE_TYPE_PROJECT: 'project',
   NODE_TYPE_LANDSCAPE: 'landscape',
   NODE_TYPE_FOLDER: 'folder',
-  NODE_TYPE_PROJECT_RESOURCE: 'projectresource',
+  NODE_TYPE_PROJECT_RESOURCE: 'projectResource',
+  NODE_TYPE_BACKUP_BUCKET: 'backupBucket',
+  NODE_TYPE_BACKUP_ENTRY: 'backupEntry',
+  NODE_TYPE_BACKUP_INFRA: 'backupInfrastructure',
   NODE_TYPE_ERROR: 'error',
-  NODE_TYPE_BACKUP_BUCKET: 'backupbucket',
-  NODE_TYPE_BACKUP_ENTRY: 'backupentry',
-  NODE_TYPE_BACKUP_INFRA: 'backupinfrastructure'
+  NODE_TYPE_MISSING_CONFIGURATION: 'missingConfig',
 }
 
 class GardenerTreeProvider {
@@ -66,6 +67,17 @@ class GardenerTreeProvider {
   getTreeItem (element) {
     if (element.nodeType === nodeType.NODE_TYPE_ERROR) {
       return new vscode.TreeItem(element.message, vscode.TreeItemCollapsibleState.None)
+    } if (element.nodeType === nodeType.NODE_TYPE_MISSING_CONFIGURATION) {
+      const treeItem = new vscode.TreeItem(getDisplayName(element), vscode.TreeItemCollapsibleState.None)
+      treeItem.contextValue = 'gardener.configurable'
+      treeItem.command = {
+        command: 'vs-gardener.openExtensionSettings',
+        title: 'Configure',
+        arguments: []
+      }
+      treeItem.iconPath = settingsIcon()
+      treeItem.tooltip = element.tooltip
+      return treeItem
     } else if (element.nodeType === nodeType.NODE_TYPE_LANDSCAPE) {
       const treeItem = new vscode.TreeItem(getDisplayName(element), vscode.TreeItemCollapsibleState.Collapsed)
       treeItem.iconPath = vscode.Uri.file(path.join(__dirname, '../assets/gardener-logo.svg'))
@@ -134,9 +146,13 @@ class GardenerTreeProvider {
     }
   }
 
-  getChildren (element) {
+  async getChildren (element) {
     if (!element) {
-      return landscapes()
+      const landscapesTree = landscapes()
+      if (!_.isEmpty(landscapesTree)) {
+        return landscapesTree
+      }
+      return asMissingConfigTreeNode('Configuration Required', 'You need to configure the Gardener extension.\nClick to open Extension Settings.')
     } else if (element.nodeType === nodeType.NODE_TYPE_LANDSCAPE) {
       return clusterScopedResources(element)
     } else if (element.childType === nodeType.NODE_TYPE_PROJECT) {
@@ -177,7 +193,22 @@ function getDisplayName (element) {
   return element.displayName || element.name
 }
 
-async function landscapes () {
+function asMissingConfigTreeNode (name, tooltip = undefined) {
+  return [{
+    nodeType: nodeType.NODE_TYPE_MISSING_CONFIGURATION,
+    name,
+    tooltip
+  }]
+}
+
+function asErrorTreeNode (message) {
+  return [{
+    nodeType: nodeType.NODE_TYPE_ERROR,
+    message
+  }]
+}
+
+function landscapes () {
   const config = vscode.workspace.getConfiguration('vscode-gardener-tools', null)
   const landscapes = _.get(config, 'landscapes')
   return _.map(landscapes, landscape => {
@@ -212,10 +243,18 @@ async function clusterScopedResources (landscape) {
 
 async function projects ({ parent: landscape }) {
   const projectClient = new ProjectClient(landscape.kubeconfig, landscape.name)
-  const projects = await projectClient.list()
-  return _.map(projects, project => {
-    return toProjectTreeNode(landscape, project)
-  })
+  try {
+    const projects = await projectClient.list()
+    return _.map(projects, project => {
+      return toProjectTreeNode(landscape, project)
+    })
+  } catch (error) {
+    const message = _.get(error, 'message')
+    if (message.includes('Forbidden')) {
+      return asMissingConfigTreeNode('No permission to list projects. Specify the projects in the extension configuration.', 'The Kubeconfig provided does not have the permission to list projects.\nYou need to specify the projects that you want to see in the extension configuration')
+    }
+    return asErrorTreeNode(message || 'Failed to list projects')
+  }
 }
 
 function toProjectTreeNode (landscape, project) {
@@ -525,6 +564,11 @@ function infraIcon (cloudType) {
     default:
       return undefined
   }
+  return vscode.Uri.file(path.join(__dirname, `../assets/${logo}`))
+}
+
+function settingsIcon () {
+  const logo = `settings-${iconColor()}.svg`
   return vscode.Uri.file(path.join(__dirname, `../assets/${logo}`))
 }
 

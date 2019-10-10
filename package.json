@@ -27,25 +27,42 @@
   "contributes": {
     "configuration": {
       "title": "Gardener Kubernetes Tools",
+      "type": "object",
       "properties": {
         "vscode-gardener-tools": {
           "type": "object",
-          "description": "VScode Gardener Settings",
+          "markdownDescription": "`Gardener` configuration",
+          "default": {
+            "vscode-light-theme": true,
+            "landscapes": []
+          },
           "properties": {
             "vscode-light-theme": {
               "type": "boolean",
-              "description": "Set this value to true if you are using a vscode light theme"
+              "markdownDescription": "Set this value to `false` if you are using a vscode dark theme",
+              "default": true
             },
             "landscapes": {
               "type": "array",
               "description": "Garden Landscapes",
+              "default": [{
+                "name": "landscape-xyz",
+                "kubeconfigPath": "",
+                "dashboardUrl": "https://"
+              }],
               "items": {
                 "type": "object",
                 "description": "Garden Landscape",
+                "default": {
+                  "name": "landscape-xyz",
+                  "kubeconfigPath": "",
+                  "dashboardUrl": "https://"
+                },
                 "properties": {
                   "name": {
                     "type": "string",
-                    "description": "Name of the garden cluster"
+                    "description": "Name of the garden cluster",
+                    "default": "landscape-xyz"
                   },
                   "gardenName": {
                     "type": "string",
@@ -53,11 +70,12 @@
                   },
                   "kubeconfigPath": {
                     "type": "string",
-                    "description": "Path to the kubeconfig of the garden cluster"
+                    "description": "Path to the kubeconfig of the (virtual) garden cluster"
                   },
                   "dashboardUrl": {
                     "type": "string",
-                    "description": "Gardener dashboard URL"
+                    "description": "Gardener Dashboard URL",
+                    "default": "https://"
                   },
                   "projects": {
                     "type": "array",
@@ -100,6 +118,11 @@
         "command": "vs-gardener.shell",
         "title": "Shell",
         "category": "Gardener"
+      },
+      {
+        "command": "vs-gardener.openExtensionSettings",
+        "title": "Open Extension Settings",
+        "category": "Gardener"
       }
     ],
     "menus": {
@@ -135,6 +158,10 @@
         {
           "command": "vs-gardener.shell",
           "when": "viewItem =~ /gardener\\.shellable/i"
+        },
+        {
+          "command": "vs-gardener.openExtensionSettings",
+          "when": "viewItem =~ /gardener\\.configurable/i"
         }
       ]
     }

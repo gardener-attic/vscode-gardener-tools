@@ -83,6 +83,7 @@ async function activate(context) {
       vscode.commands.registerCommand('vs-gardener.loadResource', loadResource),
       vscode.commands.registerCommand('vs-gardener.target', target),
       vscode.commands.registerCommand('vs-gardener.shell', shell),
+      vscode.commands.registerCommand('vs-gardener.openExtensionSettings', openExtensionSettings),
       vscode.workspace.registerFileSystemProvider(K8S_RESOURCE_SCHEME, resourceDocProvider, { /* TODO: case sensitive? */ })
     ]
 
@@ -146,6 +147,10 @@ function showInDashboard(commandTarget) {
       showLandscapeInDashboard(node)
       break
   }
+}
+
+function openExtensionSettings() {
+  vscode.commands.executeCommand('workbench.action.openSettings', 'gardener')
 }
 
 function showShootInDashboard(shootNode) {
