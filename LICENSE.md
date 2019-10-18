@@ -235,3 +235,7 @@ Copyright (c) 2016 Nathan Fischer
 - [shell-escape](https://github.com/xxorax/node-shell-escape)\
 Copyright (c) 2015 Martin PANEL
 [MIT License](https://github.com/xxorax/node-shell-escape/blob/master/README.md)
+
+- [js-yaml](https://github.com/nodeca/js-yaml)\
+Copyright (C) 2011-2015 by Vitaly Puzrin\
+[MIT License](https://github.com/nodeca/js-yaml/blob/master/LICENSE)

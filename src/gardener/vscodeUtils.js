@@ -212,12 +212,6 @@ function shellEnvironment (baseEnvironment) {
       env[pathVariable] = toolDirectory + (currentPath ? `${pathEntrySeparator()}${currentPath}` : '')
     }
   }
-
-  // const kubeconfig = getActiveKubeconfig()
-  // if (kubeconfig) {
-  //     env['KUBECONFIG'] = kubeconfig
-  // }
-
   return env
 }
 

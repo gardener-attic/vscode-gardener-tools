@@ -25,7 +25,7 @@ const urljoin = require('url-join')
 const fs = require('fs')
 const tmp = require('tmp')
 const shellEsacpe = require('shell-escape')
-
+const yaml = require('js-yaml')
 
 const {
   GardenerTreeProvider,
@@ -37,7 +37,8 @@ const {
 } = require('./gardener/client')
 const {
   configForLandscape,
-  decodeBase64
+  decodeBase64,
+  cleanKubeconfig
 } = require('./gardener/utils')
 const {
   K8S_RESOURCE_SCHEME,
@@ -438,14 +439,18 @@ function resolveCommand(commandTarget) {
 }
 
 async function getKubeconfig(target) {
-  const clusterNodeTypes = [nodeType.NODE_TYPE_SHOOT, nodeType.NODE_TYPE_PLANT, nodeType.NODE_TYPE_SEED]
-  if (_.includes(clusterNodeTypes, target.nodeType)) {
-    return await getClusterTypeKubeconfig(target)
-  } else if (target.nodeType === nodeType.NODE_TYPE_LANDSCAPE) {
-    return await getLandscapeKubeconfig(target)
-  } else {
-    return undefined
-  }
+
+  const kubeconfig = await (async () => {
+    const clusterNodeTypes = [nodeType.NODE_TYPE_SHOOT, nodeType.NODE_TYPE_PLANT, nodeType.NODE_TYPE_SEED]
+    if (_.includes(clusterNodeTypes, target.nodeType)) {
+      return await getClusterTypeKubeconfig(target)
+    } else if (target.nodeType === nodeType.NODE_TYPE_LANDSCAPE) {
+      return await getLandscapeKubeconfig(target)
+    } else {
+      return undefined
+    }
+  })()
+  return yaml.safeDump(cleanKubeconfig(kubeconfig))
 }
 
 async function writeKubeconfigToTempfile(kubeconfig) {
