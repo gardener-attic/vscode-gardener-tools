@@ -146,6 +146,9 @@ async function findBinary (binName) {
 
 function getShell () {
   const aShell = shellProxy
+  if (!aShell.config.execPath) {
+    aShell.config.execPath = process.execPath
+  }
   if (getUseWsl()) {
     return aShell.wsl
   }
