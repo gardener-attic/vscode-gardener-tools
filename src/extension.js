@@ -75,12 +75,14 @@ async function activate(context) {
     if (!kubectl.available) {
       throw new Error('kubectl not available')
     }
-    const resourceDocProvider = new KubernetesResourceVirtualFileSystemProvider(kubectl, vscode.workspace.rootPath)
+    const resourceDocProvider = new KubernetesResourceVirtualFileSystemProvider(kubectl, vscode.workspace.workspaceFolders)
 
     const subscriptions = [
       vscode.commands.registerCommand('vs-gardener.showInDashboard', showInDashboard),
       vscode.commands.registerCommand('vs-gardener.createShoot', createShoot),
       vscode.commands.registerCommand('vs-gardener.createProject', createProject),
+      vscode.commands.registerCommand('vs-gardener.register', register),
+      vscode.commands.registerCommand('vs-gardener.unregister', unregister),
       vscode.commands.registerCommand('vs-gardener.loadResource', loadResource),
       vscode.commands.registerCommand('vs-gardener.target', target),
       vscode.commands.registerCommand('vs-gardener.shell', shell),
@@ -301,6 +303,33 @@ async function target(commandTarget) {
   } catch (error) {
     vscode.window.showErrorMessage(error.message)
   }
+}
+
+function register(commandTarget) {
+  return registerUnregister(commandTarget, true)
+}
+
+function unregister(commandTarget) {
+  return registerUnregister(commandTarget, false)
+}
+
+async function registerUnregister(commandTarget, register) {
+  try {
+    const node = getNode(commandTarget)
+    const landscapeName = getLandscapeNameFromNode(node)
+    await registerUnregisterForLandscape(landscapeName, register)
+  } catch (error) {
+    vscode.window.showErrorMessage(error.message)
+  }
+}
+
+async function registerUnregisterForLandscape(landscapeName, register, inTerminal = true) {
+  const registerUnregisterCmd = register ? 'register' : 'unregister'
+  await targetLandscape(landscapeName, false)
+  if (inTerminal) {
+    return gardenctlInst.invokeInSharedTerminal(shellEsacpe([registerUnregisterCmd]))
+  }
+  return gardenctlInst.invoke(gardenctlInst.getShell()[registerUnregisterCmd])
 }
 
 async function targetProjectNode(node, inTerminal = true) {

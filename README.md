@@ -22,6 +22,7 @@ This `Visual Studio Code Kubernetes Tools` extension allows you to work with you
 - [Gardenctl](https://github.com/gardener/gardenctl) integration
   - Right click on shoot or seed to get a `Shell` to a node
   - Right click on landscape, project, shoot or seed to `Target` with gardenctl
+  - Right click on landscape to `Register` / `Unregister` for the operator shift with gardenctl
 
 ## Requirements
 - You have installed the [Kubernetes Tools](https://marketplace.visualstudio.com/items?itemName=ms-kubernetes-tools.vscode-kubernetes-tools) extension from the marketplace
