@@ -83,6 +83,7 @@ async function activate(context) {
       vscode.commands.registerCommand('vs-gardener.createProject', createProject),
       vscode.commands.registerCommand('vs-gardener.register', register),
       vscode.commands.registerCommand('vs-gardener.unregister', unregister),
+      vscode.commands.registerCommand('vs-gardener.list', list),
       vscode.commands.registerCommand('vs-gardener.loadResource', loadResource),
       vscode.commands.registerCommand('vs-gardener.target', target),
       vscode.commands.registerCommand('vs-gardener.shell', shell),
@@ -262,7 +263,6 @@ async function selectNode(kubeconfig) {
   })
 
   const value = await vscode.window.showQuickPick(pickItems, { placeHolder: "Select node" });
-
   if (!value) {
     return null;
   }
@@ -284,25 +284,75 @@ async function openShell(gardenName, projectName = undefined, clusterType, clust
 async function target(commandTarget) {
   try {
     const node = getCloudResourceNode(commandTarget)
-    const targetNodeType = _.get(node, 'nodeType')
-
-    switch (targetNodeType) {
-      case nodeType.NODE_TYPE_SHOOT:
-        await targetShootNode(node)
-        break
-      case nodeType.NODE_TYPE_SEED:
-        await targetSeedNode(node)
-        break
-      case nodeType.NODE_TYPE_PROJECT:
-        await targetProjectNode(node)
-        break
-      case nodeType.NODE_TYPE_LANDSCAPE:
-        await targetLandscape(getLandscapeNameFromNode(node))
-        break
-    }
+    await targetNode(node)
   } catch (error) {
     vscode.window.showErrorMessage(error.message)
   }
+}
+
+function targetNode(node, inTerminal = true) {
+  const targetNodeType = _.get(node, 'nodeType')
+
+  switch (targetNodeType) {
+    case nodeType.NODE_TYPE_SHOOT:
+      return targetShootNode(node, inTerminal)
+    case nodeType.NODE_TYPE_SEED:
+      return targetSeedNode(node, inTerminal)
+    case nodeType.NODE_TYPE_PROJECT:
+      return targetProjectNode(node, inTerminal)
+    case nodeType.NODE_TYPE_LANDSCAPE:
+      return targetLandscape(getLandscapeNameFromNode(node), inTerminal)
+    default:
+      throw new Error(`unsupported node type ${targetNodeType}`)
+  }
+}
+
+async function list(commandTarget) {
+  try {
+    const listType = await selectListType()
+    if (!listType) {
+      return
+    }
+
+    const node = getCloudResourceNode(commandTarget)
+    await targetNode(node, false)
+
+    listResourceType(listType)
+  } catch (error) {
+    vscode.window.showErrorMessage(error.message)
+  }
+}
+
+async function listResourceType(listType, inTerminal = true) {
+  if (inTerminal) {
+    return gardenctlInst.invokeInSharedTerminal(shellEsacpe(['ls', listType]))
+  }
+  return gardenctlInst.invoke(gardenctlInst.getShell()['ls'], listType)
+}
+
+async function selectListType() {
+  function simpleQuickPickItem (text) {
+    return {
+      label: text,
+      description: '',
+      detail: '',
+      node: text
+    }
+  }
+  const pickItems = [
+    simpleQuickPickItem('gardens'),
+    simpleQuickPickItem('projects'),
+    simpleQuickPickItem('seeds'),
+    simpleQuickPickItem('shoots'),
+    simpleQuickPickItem('issues')
+  ]
+
+  const value = await vscode.window.showQuickPick(pickItems, { placeHolder: "Select resource instance" });
+  if (!value) {
+    return null;
+  }
+
+  return value.node;
 }
 
 function register(commandTarget) {

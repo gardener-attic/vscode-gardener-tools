@@ -8,26 +8,30 @@ This `Visual Studio Code Kubernetes Tools` extension allows you to work with you
 
 ## Features
 
-- List gardener projects
-- List shoot clusters
-- List plant clusters
-- List backup infrastructure resources
-- List backup bucket resources
-- List backup entry resources
-- List seed clusters
+- List
+  - gardener projects
+  - shoot clusters
+  - plant clusters
+  - seed clusters [*]
+  - backup infrastructure resources [*]
+  - backup bucket resources [*]
+  - backup entry resources [*]
 - Right click on landscape, shoot, plant or seed cluster to `Save Kubeconfig` / `Merge into Kubeconfig`
-- Right click landscape or shoot to `Show In Dashboard`
+- Right click on landscape or shoot to `Show In Dashboard`
 - Right click on landscape to `Create Project` in gardener dashboard
 - Right click on shoots list to `Create Shoot` in gardener dashboard
 - [Gardenctl](https://github.com/gardener/gardenctl) integration
-  - Right click on shoot or seed to get a `Shell` to a node
-  - Right click on landscape, project, shoot or seed to `Target` with gardenctl
-  - Right click on landscape to `Register` / `Unregister` for the operator shift with gardenctl
+  - Right click on shoot or seed to get a `Shell` to a node [*]
+  - Right click on landscape, project, shoot or seed to `Target` with gardenctl [*]
+  - Right click on landscape, project, shoot or seed to `List` with gardenctl `gardens`, `projects`, `seeds`, `shoots` or `issues`. [*]
+  - Right click on landscape to `Register` / `Unregister` for the operator shift with gardenctl [*]
+
+[*] Gardener operator only
 
 ## Requirements
 - You have installed the [Kubernetes Tools](https://marketplace.visualstudio.com/items?itemName=ms-kubernetes-tools.vscode-kubernetes-tools) extension from the marketplace
 - Kubeconfig to (virtual) garden cluster
-- For gardener operators: [Gardenctl](https://github.com/gardener/gardenctl#installation) for `Shell` or `Target` command
+- For gardener operators: [Gardenctl](https://github.com/gardener/gardenctl#installation) for `Shell`, `Target` or `List` command
 
 ## Install
 1. [Install this extension from the Visual Studio Marketplace](https://marketplace.visualstudio.com/items?itemName=gardener.vscode-gardener-tools)
