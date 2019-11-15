@@ -112,6 +112,16 @@
         "category": "Gardener"
       },
       {
+        "command": "vs-gardener.register",
+        "title": "Landscape Admin - Register",
+        "category": "Gardener"
+      },
+      {
+        "command": "vs-gardener.unregister",
+        "title": "Landscape Admin - Unregister",
+        "category": "Gardener"
+      },
+      {
         "command": "vs-gardener.target",
         "title": "Target",
         "category": "Gardener"
@@ -144,6 +154,26 @@
         {
           "command": "vs-gardener.showInDashboard",
           "when": "viewItem =~ /gardener\\.landscape/i"
+        },
+        {
+          "command": "vs-gardener.register",
+          "when": "viewItem =~ /gardener\\.landscape/i"
+        },
+        {
+          "command": "vs-gardener.unregister",
+          "when": "viewItem =~ /gardener\\.landscape/i"
+        },
+        {
+          "command": "vs-gardener.register",
+          "when": "viewItem =~ /kubernetes\\.cloudExplorer\\.cloud\\.Gardener/i"
+        },
+        {
+          "command": "vs-gardener.unregister",
+          "when": "viewItem =~ /kubernetes\\.cloudExplorer\\.cloud\\.Gardener/i"
+        },
+        {
+          "command": "vs-gardener.openExtensionSettings",
+          "when": "viewItem =~ /kubernetes\\.cloudExplorer\\.cloud\\.Gardener/i"
         },
         {
           "command": "vs-gardener.createShoot",
