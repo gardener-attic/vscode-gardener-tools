@@ -128,12 +128,17 @@
       },
       {
         "command": "vs-gardener.shell",
-        "title": "Shell",
+        "title": "Shell..",
         "category": "Gardener"
       },
       {
         "command": "vs-gardener.openExtensionSettings",
         "title": "Open Extension Settings",
+        "category": "Gardener"
+      },
+      {
+        "command": "vs-gardener.list",
+        "title": "List..",
         "category": "Gardener"
       }
     ],
@@ -194,6 +199,10 @@
         {
           "command": "vs-gardener.openExtensionSettings",
           "when": "viewItem =~ /gardener\\.configurable/i"
+        },
+        {
+          "command": "vs-gardener.list",
+          "when": "viewItem =~ /gardener\\.listable/i"
         }
       ]
     }
