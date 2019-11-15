@@ -130,7 +130,7 @@ function getNamespaceFromTarget(target) {
 }
 
 function showInDashboard(commandTarget) {
-  const node = getNode(commandTarget)
+  const node = getCloudResourceNode(commandTarget)
   const targetNodeType = _.get(node, 'nodeType')
   const targetChildType = _.get(node, 'childType')
 
@@ -208,7 +208,7 @@ function showLandscapeInDashboard(node) {
 }
 
 async function shell(commandTarget) {
-  const node = getNode(commandTarget)
+  const node = getCloudResourceNode(commandTarget)
   const targetNodeType = _.get(node, 'nodeType')
   const supportedTypes = [nodeType.NODE_TYPE_SHOOT, nodeType.NODE_TYPE_SEED]
   if (!_.includes(supportedTypes, targetNodeType)) {
@@ -283,7 +283,7 @@ async function openShell(gardenName, projectName = undefined, clusterType, clust
 
 async function target(commandTarget) {
   try {
-    const node = getNode(commandTarget)
+    const node = getCloudResourceNode(commandTarget)
     const targetNodeType = _.get(node, 'nodeType')
 
     switch (targetNodeType) {
@@ -315,9 +315,13 @@ function unregister(commandTarget) {
 
 async function registerUnregister(commandTarget, register) {
   try {
-    const node = getNode(commandTarget)
-    const landscapeName = getLandscapeNameFromNode(node)
-    await registerUnregisterForLandscape(landscapeName, register)
+    const node = getCloudResourceNode(commandTarget)
+    if (node) { // specific landscape
+      const landscapeName = getLandscapeNameFromNode(node)
+      await registerUnregisterForLandscape(landscapeName, register)
+    } else { // register all
+      await registerUnregisterAll(register)
+    }
   } catch (error) {
     vscode.window.showErrorMessage(error.message)
   }
@@ -330,6 +334,15 @@ async function registerUnregisterForLandscape(landscapeName, register, inTermina
     return gardenctlInst.invokeInSharedTerminal(shellEsacpe([registerUnregisterCmd]))
   }
   return gardenctlInst.invoke(gardenctlInst.getShell()[registerUnregisterCmd])
+}
+
+function registerUnregisterAll(register, inTerminal = true) {
+  const registerUnregisterCmd = register ? 'register' : 'unregister'
+  const allFlag = '--all'
+  if (inTerminal) {
+    return gardenctlInst.invokeInSharedTerminal(shellEsacpe([registerUnregisterCmd, allFlag]))
+  }
+  return gardenctlInst.invoke(gardenctlInst.getShell()[registerUnregisterCmd], allFlag)
 }
 
 async function targetProjectNode(node, inTerminal = true) {
@@ -400,7 +413,7 @@ async function targetSeed(landscapeName, name, inTerminal = true) {
 }
 
 function createShoot(commandTarget) {
-  const folderNode = getNode(commandTarget, "folder")
+  const folderNode = getCloudResourceNode(commandTarget, "folder")
 
   const landscapeName = _.get(folderNode, 'parent.landscape.name')
   const dashboardUrl = getDashboardUrl(landscapeName)
@@ -415,7 +428,7 @@ function createShoot(commandTarget) {
 }
 
 function createProject(commandTarget) {
-  const projectFolder = getNode(commandTarget, "folder")
+  const projectFolder = getCloudResourceNode(commandTarget, "folder")
 
   const landscapeName = _.get(projectFolder, 'parent.name')
   const dashboardUrl = getDashboardUrl(landscapeName)
@@ -442,8 +455,8 @@ function getGardenName(landscapeName) {
   return _.get(config, 'gardenName', landscapeName)
 }
 
-function getNode(commandTarget, type = undefined) {
-  let node = _.get(resolveCommand(commandTarget), 'cloudResource')
+function getCloudResourceNode(commandTarget, type = undefined) {
+  const node = _.get(resolveCommand(commandTarget), 'cloudResource')
   if (!node) {
     return
   }
