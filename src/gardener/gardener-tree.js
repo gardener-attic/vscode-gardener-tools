@@ -85,11 +85,20 @@ class GardenerTreeProvider {
     } else if (element.nodeType === nodeType.NODE_TYPE_LANDSCAPE) {
       const treeItem = new vscode.TreeItem(getDisplayName(element), vscode.TreeItemCollapsibleState.Collapsed)
       treeItem.iconPath = vscode.Uri.file(path.join(__dirname, '../assets/gardener-logo.svg'))
-      treeItem.contextValue = `gardener.landscape` + this.targetableContextValue() + this.listableContextValue() + ` ${k8s.CloudExplorerV1.SHOW_KUBECONFIG_COMMANDS_CONTEXT}`
+      treeItem.contextValue = [
+        'gardener.landscape',
+        this.targetableContextValue(),
+        this.listableContextValue(),
+        k8s.CloudExplorerV1.SHOW_KUBECONFIG_COMMANDS_CONTEXT
+      ].join(',')
       return treeItem
     } else if (element.nodeType === nodeType.NODE_TYPE_PROJECT) {
       const treeItem = new vscode.TreeItem(getDisplayName(element), vscode.TreeItemCollapsibleState.Collapsed)
-      treeItem.contextValue = 'gardener.project' + this.targetableContextValue() + this.listableContextValue()
+      treeItem.contextValue = [
+        'gardener.project',
+        this.targetableContextValue(),
+        this.listableContextValue()
+      ].join(',')
       treeItem.tooltip = projectTooltip(element)
       treeItem.command = getLoadResourceCommand(element)
       return treeItem
@@ -108,42 +117,57 @@ class GardenerTreeProvider {
       }
       const treeItem = new vscode.TreeItem(label, vscode.TreeItemCollapsibleState.None)
       const hibernated = element.hibernated ? '.hibernated' : ''
-      treeItem.contextValue = `gardener.shoot${hibernated}` + this.targetableContextValue() + this.listableContextValue() + this.shellableContextValue(element.hibernated) + ` ${k8s.CloudExplorerV1.SHOW_KUBECONFIG_COMMANDS_CONTEXT}`
+      treeItem.contextValue = [
+        `gardener.shoot${hibernated}`,
+        this.targetableContextValue(),
+        this.listableContextValue(),
+        this.shellableContextValue(element.hibernated),
+        k8s.CloudExplorerV1.SHOW_KUBECONFIG_COMMANDS_CONTEXT
+      ].join(',')
       treeItem.command = getLoadResourceCommand(element)
       treeItem.iconPath = infraIcon(element.cloudType)
       treeItem.tooltip = shootTooltip(element)
       return treeItem
     } else if (element.nodeType === nodeType.NODE_TYPE_PLANT) {
       const treeItem = new vscode.TreeItem(getDisplayName(element), vscode.TreeItemCollapsibleState.None)
-      treeItem.contextValue = `gardener.plant ${k8s.CloudExplorerV1.SHOW_KUBECONFIG_COMMANDS_CONTEXT}`
+      treeItem.contextValue = [
+        'gardener.plant',
+        k8s.CloudExplorerV1.SHOW_KUBECONFIG_COMMANDS_CONTEXT
+      ].join(',')
       treeItem.command = getLoadResourceCommand(element)
       treeItem.iconPath = infraIcon(element.cloudType)
       treeItem.tooltip = plantTooltip(element)
       return treeItem
     } else if (element.nodeType === nodeType.NODE_TYPE_SEED) {
       const treeItem = new vscode.TreeItem(getDisplayName(element), vscode.TreeItemCollapsibleState.None)
-      treeItem.contextValue = `gardener.seed` + this.targetableContextValue() + this.listableContextValue() + this.shellableContextValue(false) + `${k8s.CloudExplorerV1.SHOW_KUBECONFIG_COMMANDS_CONTEXT}`
+      treeItem.contextValue = [
+        'gardener.seed',
+        this.targetableContextValue(),
+        this.listableContextValue(),
+        this.shellableContextValue(false),
+        k8s.CloudExplorerV1.SHOW_KUBECONFIG_COMMANDS_CONTEXT
+      ].join(',')
       treeItem.command = getLoadResourceCommand(element)
       treeItem.iconPath = infraIcon(element.cloudType)
       treeItem.tooltip = seedTooltip(element)
       return treeItem
     } else if (element.nodeType === nodeType.NODE_TYPE_BACKUP_BUCKET) {
       const treeItem = new vscode.TreeItem(getDisplayName(element), vscode.TreeItemCollapsibleState.None)
-      treeItem.contextValue = `gardener.backupbucket`
+      treeItem.contextValue = 'gardener.backupbucket'
       treeItem.command = getLoadResourceCommand(element)
       treeItem.iconPath = infraIcon(element.cloudType)
       treeItem.tooltip = backupBucketTooltip(element)
       return treeItem
     } else if (element.nodeType === nodeType.NODE_TYPE_BACKUP_ENTRY) {
       const treeItem = new vscode.TreeItem(getDisplayName(element), vscode.TreeItemCollapsibleState.None)
-      treeItem.contextValue = `gardener.backupentry`
+      treeItem.contextValue = 'gardener.backupentry'
       treeItem.command = getLoadResourceCommand(element)
       treeItem.iconPath = infraIcon(element.cloudType)
       treeItem.tooltip = backupEntryTooltip(element)
       return treeItem
     } else if (element.nodeType === nodeType.NODE_TYPE_BACKUP_INFRA) {
       const treeItem = new vscode.TreeItem(getDisplayName(element), vscode.TreeItemCollapsibleState.None)
-      treeItem.contextValue = `gardener.backupinfrastructure`
+      treeItem.contextValue = 'gardener.backupinfrastructure'
       treeItem.command = getLoadResourceCommand(element)
       treeItem.tooltip = backupInfraTooltip(element)
       return treeItem
