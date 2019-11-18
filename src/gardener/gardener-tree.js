@@ -26,10 +26,9 @@ const {
   PlantClient,
   BackupBucketClient,
   BackupEntryClient,
-  BackupInfraClient,
   SeedClient,
-  CloudProfileClient,
-  SelfSubjectAccessReviewClient
+  SelfSubjectAccessReviewClient,
+  GKVEnum
 } = require('./client')
 
 const nodeType = {
@@ -42,7 +41,6 @@ const nodeType = {
   NODE_TYPE_PROJECT_RESOURCE: 'projectResource',
   NODE_TYPE_BACKUP_BUCKET: 'backupBucket',
   NODE_TYPE_BACKUP_ENTRY: 'backupEntry',
-  NODE_TYPE_BACKUP_INFRA: 'backupInfrastructure',
   NODE_TYPE_ERROR: 'error',
   NODE_TYPE_MISSING_CONFIGURATION: 'missingConfig',
 }
@@ -125,7 +123,7 @@ class GardenerTreeProvider {
         k8s.CloudExplorerV1.SHOW_KUBECONFIG_COMMANDS_CONTEXT
       ].join(',')
       treeItem.command = getLoadResourceCommand(element)
-      treeItem.iconPath = infraIcon(element.cloudType)
+      treeItem.iconPath = infraIcon(element.providerType)
       treeItem.tooltip = shootTooltip(element)
       return treeItem
     } else if (element.nodeType === nodeType.NODE_TYPE_PLANT) {
@@ -135,7 +133,7 @@ class GardenerTreeProvider {
         k8s.CloudExplorerV1.SHOW_KUBECONFIG_COMMANDS_CONTEXT
       ].join(',')
       treeItem.command = getLoadResourceCommand(element)
-      treeItem.iconPath = infraIcon(element.cloudType)
+      treeItem.iconPath = infraIcon(element.providerType)
       treeItem.tooltip = plantTooltip(element)
       return treeItem
     } else if (element.nodeType === nodeType.NODE_TYPE_SEED) {
@@ -148,28 +146,22 @@ class GardenerTreeProvider {
         k8s.CloudExplorerV1.SHOW_KUBECONFIG_COMMANDS_CONTEXT
       ].join(',')
       treeItem.command = getLoadResourceCommand(element)
-      treeItem.iconPath = infraIcon(element.cloudType)
+      treeItem.iconPath = infraIcon(element.providerType)
       treeItem.tooltip = seedTooltip(element)
       return treeItem
     } else if (element.nodeType === nodeType.NODE_TYPE_BACKUP_BUCKET) {
       const treeItem = new vscode.TreeItem(getDisplayName(element), vscode.TreeItemCollapsibleState.None)
       treeItem.contextValue = 'gardener.backupbucket'
       treeItem.command = getLoadResourceCommand(element)
-      treeItem.iconPath = infraIcon(element.cloudType)
+      treeItem.iconPath = infraIcon(element.providerType)
       treeItem.tooltip = backupBucketTooltip(element)
       return treeItem
     } else if (element.nodeType === nodeType.NODE_TYPE_BACKUP_ENTRY) {
       const treeItem = new vscode.TreeItem(getDisplayName(element), vscode.TreeItemCollapsibleState.None)
       treeItem.contextValue = 'gardener.backupentry'
       treeItem.command = getLoadResourceCommand(element)
-      treeItem.iconPath = infraIcon(element.cloudType)
+      treeItem.iconPath = infraIcon(element.providerType)
       treeItem.tooltip = backupEntryTooltip(element)
-      return treeItem
-    } else if (element.nodeType === nodeType.NODE_TYPE_BACKUP_INFRA) {
-      const treeItem = new vscode.TreeItem(getDisplayName(element), vscode.TreeItemCollapsibleState.None)
-      treeItem.contextValue = 'gardener.backupinfrastructure'
-      treeItem.command = getLoadResourceCommand(element)
-      treeItem.tooltip = backupInfraTooltip(element)
       return treeItem
     }
   }
@@ -195,8 +187,6 @@ class GardenerTreeProvider {
       return backupBuckets(element)
     } else if (element.childType === nodeType.NODE_TYPE_BACKUP_ENTRY) {
       return backupEntries(element)
-    } else if (element.childType === nodeType.NODE_TYPE_BACKUP_INFRA) {
-      return backupinfras(element)
     } else if (element.childType === nodeType.NODE_TYPE_SEED) {
       return seeds(element)
     } else {
@@ -262,7 +252,7 @@ async function clusterScopedResources (landscape) {
   if (canIGetSeeds) {
     clusterScopedResources.push(toFolderTreeNode(landscape, 'Seeds', nodeType.NODE_TYPE_SEED))
   }
-  const canIGetBackupBuckets = await accessReview.canI('get', 'backupbuckets')
+  const canIGetBackupBuckets = await accessReview.canI('get', GKVEnum.BACKUPBUCKETS)
   if (canIGetBackupBuckets) {
     clusterScopedResources.push(toFolderTreeNode(landscape, 'BackupBuckets', nodeType.NODE_TYPE_BACKUP_BUCKET))
   }
@@ -290,7 +280,7 @@ function toProjectTreeNode (landscape, project) {
   return {
     nodeType: nodeType.NODE_TYPE_PROJECT,
     childType: nodeType.NODE_TYPE_PROJECT_RESOURCE,
-    kindPlural: 'projects',
+    kindPlural: GKVEnum.PROJECTS,
     name,
     landscape,
     displayName: _.toUpper(name),
@@ -315,14 +305,11 @@ async function projectResources (project) {
     toFolderTreeNode(project, 'Plants', nodeType.NODE_TYPE_PLANT)
   ]
   const accessReview = new SelfSubjectAccessReviewClient(project.landscape.kubeconfig)
-  const canIGetBackupEntries = await accessReview.canI('get', 'backupentries')
+  const canIGetBackupEntries = await accessReview.canI('get', GKVEnum.BACKUPENTRIES)
   if (canIGetBackupEntries) {
     resources.push(toFolderTreeNode(project, 'BackupEntries', nodeType.NODE_TYPE_BACKUP_ENTRY))
   }
-  const canIGetBackupInfras = await accessReview.canI('get', 'backupinfrastructures')
-  if (canIGetBackupInfras) {
-    resources.push(toFolderTreeNode(project, 'BackupInfrastructures', nodeType.NODE_TYPE_BACKUP_INFRA))
-  }
+
   return resources
 }
 
@@ -347,16 +334,17 @@ function toShootTreeNode (project, shoot) {
   const name = _.get(shoot, 'metadata.name')
   return {
     nodeType: nodeType.NODE_TYPE_SHOOT,
-    kindPlural: 'shoots',
+    kindPlural: GKVEnum.SHOOTS,
     name,
     project,
     kubeconfigSecretName: `${name}.kubeconfig`,
     kubeconfigSecretNamespace: project.namespace,
-    cloudType: getCloudType(_.get(shoot, 'spec.cloud')),
-    hibernated: _.get(shoot, 'spec.hibernation.enabled', false),
+    providerType: _.get(shoot, 'spec.provider.type'),
+    hibernated: _.get(shoot, 'status.hibernated', false),
     version: _.get(shoot, 'spec.kubernetes.version'),
     purpose: _.get(shoot, ['metadata', 'annotations', 'garden.sapcloud.io/purpose'], '-none-'),
-    createdBy: _.get(shoot, ['metadata', 'annotations', 'garden.sapcloud.io/createdBy'])
+    createdBy: _.get(shoot, ['metadata', 'annotations', 'garden.sapcloud.io/createdBy']),
+    seed: _.get(shoot, 'status.seed', '')
   }
 }
 
@@ -365,7 +353,8 @@ function shootTooltip (element) {
     `Shoot: ${element.name}`,
     `Kubernetes Version: ${element.version}`,
     `Created By: ${element.createdBy}`,
-    `Purpose: ${element.purpose}`
+    `Purpose: ${element.purpose}`,
+    `Seed: ${element.seed}`
   ]
   return list.join('\n')
 }
@@ -382,12 +371,12 @@ function toPlantTreeNode (project, plant) {
   const name = _.get(plant, 'metadata.name')
   return {
     nodeType: nodeType.NODE_TYPE_PLANT,
-    kindPlural: 'plants',
+    kindPlural: GKVEnum.PLANTS,
     name,
     project,
     kubeconfigSecretName: _.get(plant, 'spec.secretRef.name'),
     kubeconfigSecretNamespace: _.get(plant, 'spec.secretRef.namespace', project.namespace),
-    cloudType: _.get(plant, 'status.clusterInfo.cloud.type'),
+    providerType: _.get(plant, 'status.clusterInfo.cloud.type'),
     region: _.get(plant, 'status.clusterInfo.cloud.region'),
     version: _.get(plant, 'status.clusterInfo.kubernetes.version'),
     createdBy: _.get(plant, ['metadata', 'annotations', 'garden.sapcloud.io/createdBy']),
@@ -398,7 +387,7 @@ function toPlantTreeNode (project, plant) {
 function plantTooltip (element) {
   const list = [
     `Plant: ${element.name}`,
-    `Cloud: ${element.cloudType}/${element.region}`,
+    `Provider: ${element.providerType}/${element.region}`,
     `Kubernetes Version: ${element.version}`,
     `Created By: ${element.createdBy}`
   ]
@@ -417,12 +406,12 @@ function toBackupBucketTreeNode (landscape, backupBucket) {
   const name = _.get(backupBucket, 'metadata.name')
   return {
     nodeType: nodeType.NODE_TYPE_BACKUP_BUCKET,
-    kindPlural: 'backupbuckets',
+    kindPlural: GKVEnum.BACKUPBUCKETS,
     name,
     landscape,
     seed: _.get(backupBucket, 'spec.seed'),
     region: _.get(backupBucket, 'spec.provider.region'),
-    cloudType: _.get(backupBucket, 'spec.provider.type'),
+    providerType: _.get(backupBucket, 'spec.provider.type'),
   }
 }
 
@@ -431,7 +420,7 @@ function backupBucketTooltip (element) {
     `BackupBucket: ${element.name}`,
     `Seed: ${element.seed}`,
     `Region: ${element.region}`,
-    `Provider: ${element.cloudType}`
+    `Provider: ${element.providerType}`
   ]
   return list.join('\n')
 }
@@ -464,7 +453,7 @@ function toBackupEntryTreeNode (project, backupEntry, backupBucket) {
     project,
     bucket: _.get(backupEntry, 'spec.bucketName'),
     seed: _.get(backupEntry, 'spec.seed'),
-    cloudType: _.get(backupBucket, 'spec.provider.type'),
+    providerType: _.get(backupBucket, 'spec.provider.type'),
   }
 }
 
@@ -477,97 +466,44 @@ function backupEntryTooltip (element) {
   return list.join('\n')
 }
 
-async function backupinfras ({ parent: project }) {
-  const backupInfra = new BackupInfraClient(project.landscape.kubeconfig, project.namespace)
-  const backupInfras = await backupInfra.list()
-  return _.map(backupInfras, backupInfra => {
-    return toBackupInfraTreeNode(project, backupInfra)
-  })
-}
-
-function toBackupInfraTreeNode (project, backupInfra) {
-  const name = _.get(backupInfra, 'metadata.name')
-  return {
-    nodeType: nodeType.NODE_TYPE_BACKUP_INFRA,
-    kindPlural: 'backupinfrastructures',
-    name,
-    project,
-    seed: _.get(backupInfra, 'spec.seed'),
-    forceDeletionEnabled: _.get(backupInfra, ['metadata', 'annotations', 'backupinfrastructure.garden.sapcloud.io/force-deletion'], "false"),
-    shootUID: _.get(backupInfra, 'spec.shootUID'),
-  }
-}
-
-function backupInfraTooltip (element) {
-  const list = [
-    `BackupInfra: ${element.name}`,
-    `Seed: ${element.seed}`,
-    `Shoot UID: ${element.shootUID}`,
-    `Force Deletion Enabled: ${element.forceDeletionEnabled}`
-  ]
-  return list.join('\n')
-}
-
 async function seeds ({ parent: landscape }) {
   const seedClient = new SeedClient(landscape.kubeconfig)
-  const cloudProfilesClient = new CloudProfileClient(landscape.kubeconfig)
-  const [
-    seeds,
-    cloudProfiles
-  ] = await Promise.all([
-    seedClient.list(),
-    cloudProfilesClient.list()
-  ])
+  const seeds = await seedClient.list()
   return _.map(seeds, seed => {
-    const cloudProfile = _.find(
-      cloudProfiles,
-      cloudProfile => cloudProfile.metadata.name === _.get(seed, 'spec.cloud.profile')
-    )
-    return toSeedTreeNode(landscape, seed, cloudProfile)
+    return toSeedTreeNode(landscape, seed)
   })
 }
 
-function toSeedTreeNode (landscape, seed, cloudProfile) {
+function toSeedTreeNode (landscape, seed) {
   const name = _.get(seed, 'metadata.name')
   return {
     nodeType: nodeType.NODE_TYPE_SEED,
-    kindPlural: 'seeds',
+    kindPlural: GKVEnum.SEEDS,
     name,
     landscape,
     kubeconfigSecretName: _.get(seed, 'spec.secretRef.name'),
     kubeconfigSecretNamespace: _.get(seed, 'spec.secretRef.namespace'),
-    cloudType: getCloudType(_.get(cloudProfile, 'spec')),
-    region: _.get(seed, 'spec.cloud.region', ''),
-    visible: _.get(seed, 'spec.visible'),
-    protected: _.get(seed, 'spec.protected')
+    providerType: _.get(seed, 'spec.provider.type'),
+    region: _.get(seed, 'spec.provider.region', ''),
+    ingressDomain: _.get(seed, 'spec.dns.ingressDomain', ''),
+    minVolumeSize: _.get(seed, 'spec.volume.minimumSize')
   }
 }
 
 function seedTooltip (element) {
   const list = [
     `Seed: ${element.name}`,
-    `Cloud: ${element.cloudType}/${element.region}`,
-    `Visible: ${element.visible}`,
-    `Protected: ${element.protected}`
+    `Provider: ${element.providerType}/${element.region}`,
+    `Ingress Domain: ${element.ingressDomain}`,
+    `Min Volume Size: ${element.minVolumeSize}`
   ]
   return list.join('\n')
 }
 
-function getCloudType (object) {
-  const cloudTypes = [
-    'aws',
-    'azure',
-    'gcp',
-    'openstack',
-    'alicloud'
-  ]
-  return _.head(_.intersection(_.keys(object), cloudTypes))
-}
-
-function infraIcon (cloudType) {
+function infraIcon (providerType) {
   const color = iconColor()
   let logo
-  switch (cloudType) {
+  switch (providerType) {
     case 'aws':
       logo = `aws-${color}.svg`
       break
@@ -624,8 +560,6 @@ function getFolderIcon (type) {
       return `backup-${color}.svg`
     case nodeType.NODE_TYPE_BACKUP_ENTRY:
         return `backup-${color}.svg`
-    case nodeType.NODE_TYPE_BACKUP_INFRA:
-      return `backup-${color}.svg`
     default:
       return undefined
   }
