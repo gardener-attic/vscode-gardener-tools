@@ -21,6 +21,15 @@ const _ = require('lodash')
 
 const { configForLandscape } = require('./utils')
 
+const GKVEnum = {
+  SHOOTS: 'shoots.v1alpha1.core.gardener.cloud',
+  SEEDS: 'seeds.v1alpha1.core.gardener.cloud',
+  PLANTS: 'plants.v1alpha1.core.gardener.cloud',
+  PROJECTS: 'projects.v1alpha1.core.gardener.cloud',
+  BACKUPBUCKETS: 'backupbuckets.v1alpha1.core.gardener.cloud',
+  BACKUPENTRIES: 'backupentries.v1alpha1.core.gardener.cloud'
+}
+
 class Kubectl {
   constructor (kubeconfig, namespace) {
     this.kubeconfig = kubeconfig
@@ -78,7 +87,7 @@ class Client extends Kubectl {
 class ProjectClient extends Client {
   constructor (kubeconfig, landscapeName) {
     const namespace = undefined // Project is a cluster scoped resource
-    super(kubeconfig, namespace, 'projects')
+    super(kubeconfig, namespace, GKVEnum.PROJECTS)
     this.landscapeName = landscapeName
   }
 
@@ -102,13 +111,13 @@ class ProjectClient extends Client {
 
 class ShootClient extends Client {
   constructor (kubeconfig, namespace) {
-    super(kubeconfig, namespace, 'shoots')
+    super(kubeconfig, namespace, GKVEnum.SHOOTS)
   }
 }
 
 class PlantClient extends Client {
   constructor (kubeconfig, namespace) {
-    super(kubeconfig, namespace, 'plants')
+    super(kubeconfig, namespace, GKVEnum.PLANTS)
   }
 }
 
@@ -116,37 +125,25 @@ class PlantClient extends Client {
 class BackupBucketClient extends Client {
   constructor (kubeconfig) {
     const namespace = undefined // BackupBucket is a cluster scoped resource
-    super(kubeconfig, namespace, 'backupbuckets')
+    super(kubeconfig, namespace, GKVEnum.BACKUPBUCKETS)
   }
 }
 class BackupEntryClient extends Client {
   constructor (kubeconfig, namespace) {
-    super(kubeconfig, namespace, 'backupentries')
-  }
-}
-class BackupInfraClient extends Client {
-  constructor (kubeconfig, namespace) {
-    super(kubeconfig, namespace, 'backupinfrastructures')
+    super(kubeconfig, namespace, GKVEnum.BACKUPENTRIES)
   }
 }
 
 class SeedClient extends Client {
   constructor (kubeconfig) {
     const namespace = undefined // CloudProfile is a cluster scoped resource
-    super(kubeconfig, namespace, 'seeds')
+    super(kubeconfig, namespace, GKVEnum.SEEDS)
   }
 }
 
 class SecretClient extends Client {
   constructor (kubeconfig, namespace) {
     super(kubeconfig, namespace, 'secrets')
-  }
-}
-
-class CloudProfileClient extends Client {
-  constructor (kubeconfig) {
-    const namespace = undefined // CloudProfile is a cluster scoped resource
-    super(kubeconfig, namespace, 'cloudprofiles')
   }
 }
 
@@ -179,10 +176,9 @@ module.exports = {
   PlantClient,
   BackupBucketClient,
   BackupEntryClient,
-  BackupInfraClient,
   SeedClient,
   SecretClient,
-  CloudProfileClient,
   SelfSubjectAccessReviewClient,
-  NodeClient
+  NodeClient,
+  GKVEnum
 }

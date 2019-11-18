@@ -13,7 +13,6 @@ This `Visual Studio Code Kubernetes Tools` extension allows you to work with you
   - shoot clusters
   - plant clusters
   - seed clusters [*]
-  - backup infrastructure resources [*]
   - backup bucket resources [*]
   - backup entry resources [*]
 - Right click on landscape, shoot, plant or seed cluster to `Save Kubeconfig` / `Merge into Kubeconfig`
