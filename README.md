@@ -2,6 +2,9 @@
 
 <img src="https://user-images.githubusercontent.com/5526658/65957954-7bf8dd80-e44e-11e9-9ca5-0d419a7c2716.png" width="180"/>
 
+[![CI Build status](https://concourse.ci.infra.gardener.cloud/api/v1/teams/gardener/pipelines/vscode-gardener-tools-master/jobs/master-head-update-job/badge)](https://concourse.ci.infra.gardener.cloud/teams/gardener/pipelines/vscode-gardener-tools-master/jobs/master-head-update-job)
+[![Slack channel #gardener](https://img.shields.io/badge/slack-gardener-brightgreen.svg?logo=slack)](https://kubernetes.slack.com/messages/gardener)
+
 This `Visual Studio Code Kubernetes Tools` extension allows you to work with your gardener projects, shoots, plants and seeds.
 
 <img src="https://user-images.githubusercontent.com/5526658/60663851-a8f22000-9e60-11e9-99e0-11a6a4313fb4.png" alt="VScode Gardener Tools Screenshot" width="600"/>
