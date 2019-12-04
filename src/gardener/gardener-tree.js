@@ -82,7 +82,7 @@ class GardenerTreeProvider {
       return treeItem
     } else if (element.nodeType === nodeType.NODE_TYPE_LANDSCAPE) {
       const treeItem = new vscode.TreeItem(getDisplayName(element), vscode.TreeItemCollapsibleState.Collapsed)
-      treeItem.iconPath = vscode.Uri.file(path.join(__dirname, '../assets/gardener-logo.svg'))
+      treeItem.iconPath = vscode.Uri.file(path.join(__dirname, '..', 'assets', 'gardener-logo.svg'))
       treeItem.contextValue = [
         'gardener.landscape',
         this.targetableContextValue(),
@@ -104,7 +104,7 @@ class GardenerTreeProvider {
       const treeItem = new vscode.TreeItem(getDisplayName(element), vscode.TreeItemCollapsibleState.Collapsed)
       const folderIcon = getFolderIcon(element.childType)
       if (folderIcon) {
-        treeItem.iconPath = vscode.Uri.file(path.join(__dirname, '../assets/', folderIcon))
+        treeItem.iconPath = vscode.Uri.file(path.join(__dirname, '..', 'assets', folderIcon))
       }
       treeItem.contextValue = `gardener.folder.${element.childType}`
       return treeItem
@@ -528,12 +528,12 @@ function infraIcon (providerType) {
     default:
       return undefined
   }
-  return vscode.Uri.file(path.join(__dirname, `../assets/${logo}`))
+  return vscode.Uri.file(path.join(__dirname, '..', 'assets', logo))
 }
 
 function settingsIcon () {
   const logo = `settings-${iconColor()}.svg`
-  return vscode.Uri.file(path.join(__dirname, `../assets/${logo}`))
+  return vscode.Uri.file(path.join(__dirname, '..', 'assets', logo))
 }
 
 function iconColor () {
