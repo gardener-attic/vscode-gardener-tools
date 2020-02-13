@@ -220,6 +220,7 @@ async function shell(commandTarget) {
   try {
     const name = _.get(node, 'name')
     const landscapeName = getLandscapeNameFromNode(node)
+    const gardenName = getGardenName(landscapeName)
     const kubeconfig = await getKubeconfig(node)
     const projectName = getProjectNameFromNode(node)
     const kubeconfigTempObj = await writeKubeconfigToTempfile(kubeconfig)
@@ -231,12 +232,11 @@ async function shell(commandTarget) {
       return
     }
     if (targetNodeType === nodeType.NODE_TYPE_SHOOT) {
-      await targetShoot(landscapeName, projectName, name, false)
+      await targetShoot(gardenName, projectName, name, false)
     } else {
-      await targetSeed(landscapeName, name, false)
+      await targetSeed(gardenName, name, false)
     }
 
-    const gardenName = getGardenName(landscapeName)
     await openShell(gardenName, projectName, targetNodeType, name, clusterNode)
   } catch (error) {
     cleanupCallback()
@@ -397,21 +397,24 @@ function registerUnregisterAll(register, inTerminal = true) {
 
 async function targetProjectNode(node, inTerminal = true) {
   const landscapeName = getLandscapeNameFromNode(node)
+  const gardenName = getGardenName(landscapeName)
   const projectName = getProjectNameFromNode(node)
-  return targetProject(landscapeName, projectName, inTerminal)
+  return targetProject(gardenName, projectName, inTerminal)
 }
 
 async function targetShootNode(node, inTerminal = true) {
   const name = _.get(node, 'name')
   const landscapeName = getLandscapeNameFromNode(node)
+  const gardenName = getGardenName(landscapeName)
   const projectName = getProjectNameFromNode(node)
-  return targetShoot(landscapeName, projectName, name, inTerminal)
+  return targetShoot(gardenName, projectName, name, inTerminal)
 }
 
 async function targetSeedNode(node, inTerminal = true) {
   const name = _.get(node, 'name')
   const landscapeName = getLandscapeNameFromNode(node)
-  return targetSeed(landscapeName, name, inTerminal)
+  const gardenName = getGardenName(landscapeName)
+  return targetSeed(gardenName, name, inTerminal)
 }
 
 function getLandscapeNameFromNode(node) {
@@ -424,7 +427,7 @@ function getLandscapeNameFromNode(node) {
 
 function getProjectNameFromNode(node) {
   return _.get(node, 'project.name',
-    _.get(node, 'namespace')
+    _.get(node, 'name')
   )
 }
 
@@ -432,34 +435,30 @@ async function targetLandscape(landscapeName, inTerminal = true) {
   const gardenName = getGardenName(landscapeName)
 
   if (inTerminal) {
-    return gardenctlInst.invokeInSharedTerminal(shellEsacpe(['target', 'garden', gardenName]))
+    return gardenctlInst.invokeInSharedTerminal(shellEsacpe(['target', '--garden', gardenName]))
   }
-
-  return gardenctlInst.invoke(gardenctlInst.getShell().target.garden, gardenName)
+  return gardenctlInst.invoke(gardenctlInst.getShell().target, '--garden', gardenName)
 }
 
-async function targetProject(landscapeName, projectName, inTerminal = true) {
-  await targetLandscape(landscapeName, false)
+async function targetProject(gardenName, projectName, inTerminal = true) {
   if (inTerminal) {
-    return gardenctlInst.invokeInSharedTerminal(shellEsacpe(['target', 'project', projectName]))
+    return gardenctlInst.invokeInSharedTerminal(shellEsacpe(['target', '--garden', gardenName, '--project', projectName]))
   }
-  return gardenctlInst.invoke(gardenctlInst.getShell().target.project, projectName)
+  return gardenctlInst.invoke(gardenctlInst.getShell().target, '--garden', gardenName, '--project', projectName)
 }
 
-async function targetShoot(landscapeName, projectName, name, inTerminal = true) {
-  await targetProject(landscapeName, projectName, false) // TODO currently gardenctl does not allow to set garden and project as options so we need to target it one by one
+async function targetShoot(gardenName, projectName, name, inTerminal = true) {
   if (inTerminal) {
-    return gardenctlInst.invokeInSharedTerminal(shellEsacpe(['target', 'shoot', name]))
+    return gardenctlInst.invokeInSharedTerminal(shellEsacpe(['target', '--garden', gardenName, '--project', projectName, '--shoot', name]))
   }
-  return gardenctlInst.invoke(gardenctlInst.getShell().target.shoot, name)
+  return gardenctlInst.invoke(gardenctlInst.getShell().target, '--garden', gardenName, '--project', projectName, '--shoot', name)
 }
 
-async function targetSeed(landscapeName, name, inTerminal = true) {
-  await targetLandscape(landscapeName, false)
+async function targetSeed(gardenName, name, inTerminal = true) {
   if (inTerminal) {
-    return gardenctlInst.invokeInSharedTerminal(shellEsacpe(['target', 'seed', name]))
+    return gardenctlInst.invokeInSharedTerminal(shellEsacpe(['target', '--garden', gardenName, '--seed', name]))
   }
-  return gardenctlInst.invoke(gardenctlInst.getShell().target.seed, name)
+  return gardenctlInst.invoke(gardenctlInst.getShell().target, '--garden', gardenName, '--seed', name)
 }
 
 function createShoot(commandTarget) {

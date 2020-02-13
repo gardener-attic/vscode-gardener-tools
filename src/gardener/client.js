@@ -22,12 +22,12 @@ const _ = require('lodash')
 const { configForLandscape } = require('./utils')
 
 const GKVEnum = {
-  SHOOTS: 'shoots.v1alpha1.core.gardener.cloud',
-  SEEDS: 'seeds.v1alpha1.core.gardener.cloud',
-  PLANTS: 'plants.v1alpha1.core.gardener.cloud',
-  PROJECTS: 'projects.v1alpha1.core.gardener.cloud',
-  BACKUPBUCKETS: 'backupbuckets.v1alpha1.core.gardener.cloud',
-  BACKUPENTRIES: 'backupentries.v1alpha1.core.gardener.cloud'
+  SHOOTS: 'shoots.v1beta1.core.gardener.cloud',
+  SEEDS: 'seeds.v1beta1.core.gardener.cloud',
+  PLANTS: 'plants.v1beta1.core.gardener.cloud',
+  PROJECTS: 'projects.v1beta1.core.gardener.cloud',
+  BACKUPBUCKETS: 'backupbuckets.v1beta1.core.gardener.cloud',
+  BACKUPENTRIES: 'backupentries.v1beta1.core.gardener.cloud'
 }
 
 class Kubectl {
