@@ -342,9 +342,9 @@ function toShootTreeNode (project, shoot) {
     providerType: _.get(shoot, 'spec.provider.type'),
     hibernated: _.get(shoot, 'status.hibernated', false),
     version: _.get(shoot, 'spec.kubernetes.version'),
-    purpose: _.get(shoot, ['metadata', 'annotations', 'garden.sapcloud.io/purpose'], '-none-'),
-    createdBy: _.get(shoot, ['metadata', 'annotations', 'garden.sapcloud.io/createdBy']),
-    seed: _.get(shoot, 'status.seed', '')
+    purpose: _.get(shoot, 'spec.purpose', '-none-'),
+    createdBy: _.get(shoot, ['metadata', 'annotations', 'gardener.cloud/created-by']),
+    seed: _.get(shoot, 'spec.seedName', '')
   }
 }
 
@@ -409,7 +409,7 @@ function toBackupBucketTreeNode (landscape, backupBucket) {
     kindPlural: GKVEnum.BACKUPBUCKETS,
     name,
     landscape,
-    seed: _.get(backupBucket, 'spec.seed'),
+    seed: _.get(backupBucket, 'spec.seedName'),
     region: _.get(backupBucket, 'spec.provider.region'),
     providerType: _.get(backupBucket, 'spec.provider.type'),
   }
@@ -452,7 +452,7 @@ function toBackupEntryTreeNode (project, backupEntry, backupBucket) {
     name,
     project,
     bucket: _.get(backupEntry, 'spec.bucketName'),
-    seed: _.get(backupEntry, 'spec.seed'),
+    seed: _.get(backupEntry, 'spec.seedName'),
     providerType: _.get(backupBucket, 'spec.provider.type'),
   }
 }
@@ -524,6 +524,12 @@ function infraIcon (providerType) {
       break
     case 'gke':
       logo = `gke-${color}.svg`
+      break
+    case 'vsphere':
+      logo = `vsphere-${color}.svg`
+      break
+    case 'metal':
+      logo = `metal-${color}.svg`
       break
     default:
       return undefined
