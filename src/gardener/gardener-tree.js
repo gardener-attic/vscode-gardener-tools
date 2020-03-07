@@ -540,7 +540,7 @@ function infraIcon (providerType) {
       logo = `metal-${color}.svg`
       break
     default:
-      logo = `unknown-${color}.svg`
+      logo = `default-${color}.svg`
   }
   return vscode.Uri.file(path.join(__dirname, '..', 'assets', logo))
 }
