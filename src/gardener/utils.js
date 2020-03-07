@@ -65,8 +65,20 @@ function cleanKubeconfig (input) {
   return cleanConfig(input)
 }
 
+// copied from gardener/dashboard
+function canI ({ resourceRules = [] } = {}, verb, apiGroup, resouce, resourceName) {
+  let filtered = _.filter(resourceRules, ({ apiGroups }) => _.includes(apiGroups, apiGroup) || _.includes(apiGroups, '*'))
+  filtered = _.filter(filtered, ({ resources }) => _.includes(resources, resouce) || _.includes(resources, '*'))
+  filtered = _.filter(filtered, ({ verbs }) => _.includes(verbs, verb) || _.includes(verbs, '*'))
+  filtered = _.filter(filtered, ({ resourceNames }) => _.isEmpty(resourceNames) ||_. includes(resourceNames, resourceName) || _.includes(resourceNames, '*'))
+
+  return !_.isEmpty(filtered)
+}
+
+
 module.exports = {
   configForLandscape,
   decodeBase64,
-  cleanKubeconfig
+  cleanKubeconfig,
+  canI
 }

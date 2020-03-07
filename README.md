@@ -57,7 +57,7 @@ This extension contributes the following settings:
 * `vscode-gardener-tools.landscapes[].kubeconfigPath`: Path to the kubeconfig of the garden cluster.
   * How to get the kubeconfig as regular project member: In the gardener dashboard, go to the `Members` section of your project and create a new service account. Afterwards you can download the kubeconfig of the service account.
 * `vscode-gardener-tools.landscapes[].dashboardUrl`: Gardener dashboard URL,
-* `vscode-gardener-tools.landscapes[].projects[]`: Optional list of projects (names) to be shown. However, you should specify this list if you do not have operator rights on the garden cluster or if you want to see only those projects.
+* `vscode-gardener-tools.landscapes[].projects[]`: Optional projects filter. List of projects (names) to be shown. You need to have access to these projects.
 
 Example config settings.json:
 ```js
