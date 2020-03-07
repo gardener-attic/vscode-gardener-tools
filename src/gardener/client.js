@@ -18,8 +18,12 @@
 
 const k8s = require('vscode-kubernetes-tools-api')
 const _ = require('lodash')
+const tmp = require('tmp')
+const fs = require('fs')
+const yaml = require('js-yaml')
 
-const { configForLandscape } = require('./utils')
+const { configForLandscape, canI } = require('./utils')
+const { getUseWsl, convertWindowsToWSL } = require('./vscodeUtils')
 
 const GKVEnum = {
   SHOOTS: 'shoots.v1beta1.core.gardener.cloud',
@@ -85,27 +89,41 @@ class Client extends Kubectl {
 }
 
 class ProjectClient extends Client {
-  constructor (kubeconfig, landscapeName) {
+  constructor (kubeconfig, landscapeName, permissions) {
     const namespace = undefined // Project is a cluster scoped resource
     super(kubeconfig, namespace, GKVEnum.PROJECTS)
     this.landscapeName = landscapeName
+    this.permissions = permissions
   }
 
   async list () {
     const config = configForLandscape(this.landscapeName)
-    const projectNames = _.get(config, 'projects')
-    if (!_.isEmpty(projectNames)) {
-      const promises = _.map(projectNames, projectName =>
-        this.cmd(`get project ${projectName} -o json --kubeconfig ${this.kubeconfig}`).catch(err => {
-          console.log(err)
-        })
-      )
-      let projects = await Promise.all(promises)
-      projects = _.filter(projects, project => project !== undefined)
-      return projects
+    let projectNames = _.get(config, 'projects')
+    if (_.isEmpty(projectNames)) {
+      if (canI(this.permissions, 'list', 'core.gardener.cloud', 'projects')) {
+        return super.list()
+      }
+
+      projectNames = _
+        .chain(this.permissions)
+        .get('resourceRules')
+        .filter(({ apiGroups }) => _.includes(apiGroups, 'core.gardener.cloud'))
+        .filter(({ resources }) => _.includes(resources, 'projects'))
+        .flatMap('resourceNames')
+        .compact()
+        .uniq()
+        .sort()
+        .value()
     }
 
-    return super.list()
+    const promises = _.map(projectNames, projectName =>
+      this.cmd(`get project ${projectName} -o json --kubeconfig ${this.kubeconfig}`).catch(err => {
+        console.log(err)
+      })
+    )
+    let projects = await Promise.all(promises)
+    projects = _.compact(projects)
+    return projects
   }
 }
 
@@ -170,6 +188,39 @@ class SelfSubjectAccessReviewClient extends Kubectl {
   }
 }
 
+class SelfSubjectRulesReviewClient extends Kubectl {
+  constructor (kubeconfig) {
+    const namespace = undefined
+    super(kubeconfig, namespace)
+  }
+
+  async getPermissions (namespace) {
+    const tmpobj = tmp.fileSync()
+    const body = {
+      kind: 'SelfSubjectRulesReview',
+      apiVersion: 'authorization.k8s.io/v1',
+      metadata: {
+        name: 'vscode-gardener'
+      },
+      spec: {
+        namespace
+      }
+    }
+    const fileContent = yaml.safeDump(body)
+    fs.writeFileSync(tmpobj.name, fileContent)
+
+    let fileName = tmpobj.name
+    if (getUseWsl()) {
+        fileName = convertWindowsToWSL(fileName)
+    }
+
+    const { status: res } = await this.cmd(`create -f ${fileName} -ojson --kubeconfig ${this.kubeconfig}`)
+    tmpobj.removeCallback()
+
+    return res
+  }
+}
+
 module.exports = {
   ProjectClient,
   ShootClient,
@@ -179,6 +230,7 @@ module.exports = {
   SeedClient,
   SecretClient,
   SelfSubjectAccessReviewClient,
+  SelfSubjectRulesReviewClient,
   NodeClient,
   GKVEnum
 }

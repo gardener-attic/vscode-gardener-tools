@@ -250,7 +250,7 @@ async function selectNode(kubeconfig) {
 
   if (_.isEmpty(nodes)) {
     vscode.window.showInformationMessage('This cluster currently does not have any nodes')
-    return null;
+    return null
   }
 
   const pickItems = _.map(nodes, node => {
@@ -262,23 +262,23 @@ async function selectNode(kubeconfig) {
     }
   })
 
-  const value = await vscode.window.showQuickPick(pickItems, { placeHolder: "Select node" });
+  const value = await vscode.window.showQuickPick(pickItems, { placeHolder: "Select node" })
   if (!value) {
-    return null;
+    return null
   }
 
-  return value.node;
+  return value.node
 }
 
 async function openShell(gardenName, projectName = undefined, clusterType, clusterName, clusterNode) {
-  const terminalShellCmd = ['shell', clusterNode];
+  const terminalShellCmd = ['shell', clusterNode]
   let terminalName = `shell on ${gardenName}`
   if (projectName) {
     terminalName += `/${projectName}`
   }
   terminalName += `/${clusterType}/${clusterName}/${clusterNode}`
 
-  await gardenctlInst.runAsTerminal(terminalShellCmd, terminalName);
+  await gardenctlInst.runAsTerminal(terminalShellCmd, terminalName)
 }
 
 async function target(commandTarget) {
@@ -347,12 +347,12 @@ async function selectListType() {
     simpleQuickPickItem('issues')
   ]
 
-  const value = await vscode.window.showQuickPick(pickItems, { placeHolder: "Select resource instance" });
+  const value = await vscode.window.showQuickPick(pickItems, { placeHolder: "Select resource instance" })
   if (!value) {
-    return null;
+    return null
   }
 
-  return value.node;
+  return value.node
 }
 
 function register(commandTarget) {

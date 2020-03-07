@@ -28,8 +28,10 @@ const {
   BackupEntryClient,
   SeedClient,
   SelfSubjectAccessReviewClient,
+  SelfSubjectRulesReviewClient,
   GKVEnum
 } = require('./client')
+const { canI } = require('./utils')
 
 const nodeType = {
   NODE_TYPE_SHOOT: 'shoot',
@@ -244,15 +246,18 @@ function asLandscapeTreeNode (name, kubeconfig) {
 }
 
 async function clusterScopedResources (landscape) {
-  const accessReview = new SelfSubjectAccessReviewClient(landscape.kubeconfig)
-  const canIGetSeeds = await accessReview.canI('get', 'seeds')
+  const rulesReview = new SelfSubjectRulesReviewClient(landscape.kubeconfig)
+  const permissions = await rulesReview.getPermissions('*')
+
+  const canIGetSeeds = canI(permissions, 'get', 'core.gardener.cloud', 'seeds')
+
   const clusterScopedResources = [
     toFolderTreeNode(landscape, 'Projects', nodeType.NODE_TYPE_PROJECT)
   ]
   if (canIGetSeeds) {
     clusterScopedResources.push(toFolderTreeNode(landscape, 'Seeds', nodeType.NODE_TYPE_SEED))
   }
-  const canIGetBackupBuckets = await accessReview.canI('get', GKVEnum.BACKUPBUCKETS)
+  const canIGetBackupBuckets = canI(permissions, 'get', 'core.gardener.cloud', 'backupbuckets')
   if (canIGetBackupBuckets) {
     clusterScopedResources.push(toFolderTreeNode(landscape, 'BackupBuckets', nodeType.NODE_TYPE_BACKUP_BUCKET))
   }
@@ -260,7 +265,10 @@ async function clusterScopedResources (landscape) {
 }
 
 async function projects ({ parent: landscape }) {
-  const projectClient = new ProjectClient(landscape.kubeconfig, landscape.name)
+  const rulesReview = new SelfSubjectRulesReviewClient(landscape.kubeconfig)
+  const permissions = await rulesReview.getPermissions('*')
+
+  const projectClient = new ProjectClient(landscape.kubeconfig, landscape.name, permissions)
   try {
     const projects = await projectClient.list()
     return _.map(projects, project => {
@@ -532,7 +540,7 @@ function infraIcon (providerType) {
       logo = `metal-${color}.svg`
       break
     default:
-      return undefined
+      logo = `unknown-${color}.svg`
   }
   return vscode.Uri.file(path.join(__dirname, '..', 'assets', logo))
 }

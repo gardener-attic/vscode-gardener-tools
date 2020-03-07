@@ -28,7 +28,7 @@
 
 const vscode = require('vscode')
 const path = require('path')
-const shellProxy = require('shelljs-exec-proxy');
+const shellProxy = require('shelljs-exec-proxy')
 const sysfs = require('fs')
 const _ = require('lodash')
 
@@ -244,6 +244,12 @@ function getUseWsl () {
   return vscode.workspace.getConfiguration(EXTENSION_CONFIG_KEY)[USE_WSL_KEY]
 }
 
+function convertWindowsToWSL (filePath) {
+  const drive = filePath[0].toLowerCase()
+  const path = filePath.substring(2).replace(/\\/g, '/')
+  return `/mnt/${drive}/${path}`
+}
+
 function getToolPath (tool) {
   const baseKey = toolPathBaseKey(tool)
   return getPathSetting(baseKey)
@@ -410,5 +416,7 @@ class GardenctlImpl {
 
 module.exports = {
   GardenctlImpl,
-  CheckPresentMessageMode
+  CheckPresentMessageMode,
+  convertWindowsToWSL,
+  getUseWsl
 }
