@@ -2,6 +2,7 @@ vscode-gardener-tools:
   jobs:
     release:
       traits:
+        component_descriptor: ~
         version:
           preprocess: 'finalize'
           inject_effective_version: True
