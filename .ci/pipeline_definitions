@@ -30,4 +30,5 @@ vscode-gardener-tools:
     head-update:
       traits:
         version: ~
+        component_descriptor: ~
         draft_release: ~
