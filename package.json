@@ -221,7 +221,7 @@
   "dependencies": {
     "eslint": "^7.4.0",
     "js-yaml": "^3.14.0",
-    "lodash": "^4.17.19",
+    "lodash": "^4.17.21",
     "shell-escape": "^0.2.0",
     "shelljs-exec-proxy": "^0.1.1",
     "tmp": "^0.2.1",
