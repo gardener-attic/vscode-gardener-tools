@@ -223,7 +223,7 @@
     "js-yaml": "^3.14.0",
     "lodash": "^4.17.21",
     "shell-escape": "^0.2.0",
-    "shelljs-exec-proxy": "^0.1.1",
+    "shelljs-exec-proxy": "^0.2.1",
     "tmp": "^0.2.1",
     "url-join": "^4.0.0",
     "vscode-kubernetes-tools-api": "^1.2.0"
