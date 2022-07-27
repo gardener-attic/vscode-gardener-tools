@@ -1,3 +1,6 @@
+## :warning: DEPRECATED :warning:
+This component is deprecated and will not be maintained anymore
+
 # Gardener Tools for VSCode
 
 <img src="https://user-images.githubusercontent.com/5526658/65957954-7bf8dd80-e44e-11e9-9ca5-0d419a7c2716.png" width="180"/>
