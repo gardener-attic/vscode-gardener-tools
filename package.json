@@ -9,7 +9,7 @@
   "description": "Display Gardener Kubernetes Services within VS Code",
   "version": "0.12.0",
   "engines": {
-    "vscode": "^1.34.0"
+    "vscode": "^1.47.0"
   },
   "license": "SEE LICENSE IN LICENSE.md",
   "categories": [
